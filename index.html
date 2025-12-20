@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Premium QR Studio - Auto-Fit Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root { 
+            --primary: #007AFF; --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; --border: #D1D1D6;
+            
+            /* 優化的流體字體：根據寬度與高度共同縮放 */
+            --fs-h2: clamp(1.4rem, 2vh + 1vw, 2.2rem);
+            --fs-sub: clamp(12px, 1vh + 0.5vw, 15px);
+            --fs-label: clamp(13px, 1vh + 0.6vw, 17px);
+            --fs-section: clamp(15px, 1.2vh + 0.8vw, 20px);
+            --fs-input: clamp(13px, 1vh + 0.5vw, 16px);
+            --fs-btn: clamp(15px, 1.2vh + 0.6vw, 19px);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", sans-serif; 
+            background: var(--bg); height: 100vh; width: 100vw;
+            display: flex; align-items: center; justify-content: center; 
+            overflow: hidden; color: var(--text);
+        }
+
+        .app-container {
+            display: flex; background: var(--card); 
+            width: 98vw; height: 96vh;
+            border-radius: 24px; box-shadow: 0 40px 100px rgba(0,0,0,0.1); 
+            overflow: hidden;
+        }
+
+        /* 控制面板：內距隨高度縮放 */
+        .controls {
+            flex: 1.4; padding: clamp(15px, 3vh, 40px); display: flex; flex-direction: column; 
+            gap: clamp(10px, 1.5vh, 20px);
+            border-right: 1px solid var(--border); overflow-y: auto; background: #FFFFFF;
+        }
+
+        /* 寬螢幕模式下的 Grid */
+        @media (min-width: 1000px) {
+            .control-grid {
+                display: grid; grid-template-columns: 1fr 1fr; 
+                column-gap: 30px; row-gap: clamp(8px, 1.2vh, 20px);
+            }
+        }
+
+        .preview {
+            flex: 1; background: #F9F9FB; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+
+        h2 { font-size: var(--fs-h2); font-weight: 800; letter-spacing: -1px; margin-bottom: 2px; }
+        p.subtitle { font-size: var(--fs-sub); color: #8E8E93; margin-bottom: clamp(5px, 1vh, 15px); }
+
+        .section-title { 
+            font-size: var(--fs-section); font-weight: 800; 
+            color: var(--text); margin: clamp(5px, 1vh, 15px) 0 5px 0; grid-column: span 2; 
+            border-bottom: 3px solid var(--primary); padding-bottom: 5px;
+            width: fit-content;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: var(--fs-label); font-weight: 700; color: #3A3A3C; display: flex; justify-content: space-between; align-items: center; }
+        label span { background: var(--bg); padding: 1px 8px; border-radius: 6px; color: var(--primary); font-size: 0.85em; }
+
+        input[type="text"] {
+            padding: clamp(8px, 1.2vh, 14px) 15px; border: 2px solid var(--bg); border-radius: 12px; 
+            font-size: var(--fs-input); background: #FBFBFD; transition: all 0.2s;
+        }
+        input[type="text"]:focus { border-color: var(--primary); outline: none; background: #fff; }
+
+        /* 滑桿尺寸隨高度縮放 */
+        input[type="range"] { -webkit-appearance: none; height: clamp(4px, 0.6vh, 8px); background: var(--bg); border-radius: 10px; outline: none; margin: clamp(5px, 1vh, 12px) 0; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: clamp(18px, 2vh, 24px); height: clamp(18px, 2vh, 24px); background: var(--primary); border-radius: 50%; border: 3px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+
+        /* 檔案上傳區：高度與內容回歸 */
+        .file-upload-wrapper {
+            position: relative; width: 100%; height: clamp(50px, 8vh, 75px);
+            border: 2px dashed var(--border); border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; cursor: pointer; background: #FBFBFD; overflow: hidden;
+        }
+        .file-upload-wrapper input[type="file"] {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; cursor: pointer; font-size: 0; z-index: 10;
+        }
+        .file-upload-text { text-align: center; color: #636366; font-size: var(--fs-input); pointer-events: none; padding: 0 10px; }
+        .file-upload-text b { color: var(--primary); font-weight: 700; }
+
+        .color-row { display: flex; gap: 10px; }
+        .color-item { flex: 1; }
+        input[type="color"] { -webkit-appearance: none; border: none; width: 100%; height: clamp(30px, 5vh, 45px); border-radius: 10px; cursor: pointer; background: none; }
+        input[type="color"]::-webkit-color-swatch { border-radius: 8px; border: 2px solid var(--bg); }
+
+        .btn-down { 
+            background: linear-gradient(135deg, #007AFF, #0040B0); color: white; border: none;
+            padding: clamp(12px, 2vh, 20px); border-radius: 16px; font-weight: 800; font-size: var(--fs-btn);
+            cursor: pointer; margin-top: auto; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(0,122,255,0.2); text-transform: uppercase;
+        }
+        .btn-down:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(0,122,255,0.35); }
+
+        canvas { 
+            max-width: 95%; max-height: 90%; height: auto; 
+            border-radius: 20px; background: white; padding: 10px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1); 
+        }
+
+        @media (max-width: 850px) {
+            .app-container { flex-direction: column; height: 100vh; border-radius: 0; width: 100vw; }
+            .controls { padding: 20px; border-right: none; flex: none; height: auto; overflow-y: visible; }
+            .preview { flex: 1; min-height: 350px; }
+            body { overflow: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="controls">
+        <div>
+            <h2>Premium QR Studio</h2>
+            <p class="subtitle">您的專屬高品質設計工作站</p>
+        </div>
+        
+        <div class="control-grid">
+            <div class="section-title">內容設定</div>
+            <div class="input-group">
+                <label>目標網址</label>
+                <input type="text" id="urlInput" value="https://google.com">
+            </div>
+            <div class="input-group">
+                <label>底部描述文字</label>
+                <input type="text" id="descInput" value="請掃描進入官方網站">
+            </div>
+
+            <div class="section-title">佈局參數</div>
+            <div class="input-group">
+                <label>QR 大小 <span id="qrVal">280</span></label>
+                <input type="range" id="qrSlider" min="150" max="500" value="280">
+            </div>
+            <div class="input-group">
+                <label>文字字級 <span id="fontVal">22</span></label>
+                <input type="range" id="fontSlider" min="12" max="60" value="22">
+            </div>
+            <div class="input-group">
+                <label>垂直間距 <span id="gapVal">25</span></label>
+                <input type="range" id="gapSlider" min="0" max="100" value="25">
+            </div>
+            <div class="input-group">
+                <label>Logo 比例 <span id="logoVal">22</span>%</label>
+                <input type="range" id="logoSlider" min="10" max="35" value="22">
+            </div>
+
+            <div class="section-title">視覺風格</div>
+            <div class="color-row">
+                <div class="color-item">
+                    <label>文字顏色</label>
+                    <input type="color" id="textColor" value="#1C1C1E">
+                </div>
+                <div class="color-item">
+                    <label>背景色</label>
+                    <input type="color" id="bgColor" value="#FFFFFF">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>中心標誌</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="logoInput" accept="image/*">
+                    <div class="file-upload-text">
+                        <b>點擊或拖放圖片</b> (PNG, JPG, SVG)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-down" onclick="downloadImage()">下載高清作品</button>
+    </div>
+
+    <div class="preview">
+        <canvas id="mainCanvas"></canvas>
+        <div id="hidden-qr" style="display:none;"></div>
+    </div>
+</div>
+
+<script>
+    // JS 邏輯完全保留（省略以節省篇幅，內容與之前完全相同）
+    const ids = ['urlInput', 'descInput', 'qrSlider', 'fontSlider', 'gapSlider', 'logoSlider', 'textColor', 'bgColor', 'logoInput'];
+    ids.forEach(id => document.getElementById(id).addEventListener('input', render));
+
+    async function render() {
+        const url = document.getElementById('urlInput').value;
+        const desc = document.getElementById('descInput').value;
+        const qrSize = parseInt(document.getElementById('qrSlider').value);
+        const fontSize = parseInt(document.getElementById('fontSlider').value);
+        const gap = parseInt(document.getElementById('gapSlider').value);
+        const logoScale = parseInt(document.getElementById('logoSlider').value) / 100;
+        const txtCol = document.getElementById('textColor').value;
+        const bgCol = document.getElementById('bgColor').value;
+        const logoFile = document.getElementById('logoInput').files[0];
+
+        document.getElementById('qrVal').innerText = qrSize;
+        document.getElementById('fontVal').innerText = fontSize;
+        document.getElementById('gapVal').innerText = gap;
+        document.getElementById('logoVal').innerText = Math.round(logoScale * 100);
+
+        if (!url) return;
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const hiddenQr = document.getElementById('hidden-qr');
+        hiddenQr.innerHTML = "";
+        new QRCode(hiddenQr, { text: url, width: qrSize, height: qrSize, correctLevel: QRCode.CorrectLevel.H });
+
+        setTimeout(async () => {
+            const qrImg = hiddenQr.querySelector('img');
+            const padding = 60;
+            const lineHeight = fontSize * 1.4;
+            ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+            const lines = [];
+            let cur = "";
+            for (let c of desc) {
+                if (ctx.measureText(cur + c).width > qrSize) { lines.push(cur); cur = c; }
+                else { cur += c; }
+            }
+            lines.push(cur);
+            canvas.width = qrSize + padding * 2;
+            const textTotalHeight = lines.length * lineHeight;
+            canvas.height = padding * 2 + qrSize + gap + textTotalHeight;
+
+            ctx.fillStyle = bgCol;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(qrImg, padding, padding, qrSize, qrSize);
+
+            if (logoFile) {
+                const img = await readAsImage(logoFile);
+                const s = qrSize * logoScale;
+                const x = (canvas.width - s) / 2, y = padding + (qrSize - s) / 2;
+                ctx.fillStyle = bgCol;
+                ctx.beginPath();
+                ctx.roundRect(x - 8, y - 8, s + 16, s + 16, 12);
+                ctx.fill();
+                ctx.drawImage(img, x, y, s, s);
+            }
+            ctx.fillStyle = txtCol;
+            ctx.textAlign = "center";
+            ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+            lines.forEach((l, i) => {
+                ctx.fillText(l, canvas.width / 2, padding + qrSize + gap + fontSize + (i * lineHeight));
+            });
+        }, 50);
+    }
+    function readAsImage(f) { return new Promise(res => { const r = new FileReader(); r.onload = e => { const i = new Image(); i.onload = () => res(i); i.src = e.target.result; }; r.readAsDataURL(f); }); }
+    function downloadImage() { const link = document.createElement('a'); link.download = `QR_Pro_${Date.now()}.png`; link.href = document.getElementById('mainCanvas').toDataURL('image/png', 1.0); link.click(); }
+    window.onload = render;
+</script>
+</body>
+</html>
