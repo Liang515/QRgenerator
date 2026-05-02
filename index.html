@@ -201,9 +201,18 @@
         btn.innerText = isCollapsed ? "展開預覽 👁️" : "收合預覽 ✕";
     }
 
+    function debounce(func, timeout = 100) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        };
+    }
+
     // --- QR 渲染邏輯 ---
     const ids = ['urlInput', 'descInput', 'qrSlider', 'fontSlider', 'gapSlider', 'logoSlider', 'textColor', 'bgColor', 'logoInput'];
-    ids.forEach(id => document.getElementById(id).addEventListener('input', render));
+    const debouncedRender = debounce(render, 80);
+    ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedRender));
 
     async function render() {
         const url = document.getElementById('urlInput').value;
@@ -241,12 +250,23 @@
                 else { cur += c; }
             }
             lines.push(cur);
-            canvas.width = qrSize + padding * 2;
+
             const textTotalHeight = lines.length * lineHeight;
-            canvas.height = padding * 2 + qrSize + gap + textTotalHeight;
+            const baseWidth = qrSize + padding * 2;
+            const baseHeight = padding * 2 + qrSize + gap + textTotalHeight;
+
+            // Retina 螢幕（高解析度）優化
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = baseWidth * dpr;
+            canvas.height = baseHeight * dpr;
+            canvas.style.width = baseWidth + "px";
+            canvas.style.height = baseHeight + "px";
+
+            // 縮放 Context
+            ctx.scale(dpr, dpr);
 
             ctx.fillStyle = bgCol;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, baseWidth, baseHeight);
             ctx.drawImage(qrImg, padding, padding, qrSize, qrSize);
 
             let logoImgToDraw = null;
@@ -263,7 +283,7 @@
 
             if (logoImgToDraw) {
                 const s = qrSize * logoScale;
-                const x = (canvas.width - s) / 2, y = padding + (qrSize - s) / 2;
+                const x = (baseWidth - s) / 2, y = padding + (qrSize - s) / 2;
                 ctx.fillStyle = bgCol;
                 ctx.beginPath();
                 ctx.roundRect(x - 8, y - 8, s + 16, s + 16, 12);
@@ -274,7 +294,7 @@
             ctx.textAlign = "center";
             ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
             lines.forEach((l, i) => {
-                ctx.fillText(l, canvas.width / 2, padding + qrSize + gap + fontSize + (i * lineHeight));
+                ctx.fillText(l, baseWidth / 2, padding + qrSize + gap + fontSize + (i * lineHeight));
             });
         }, 80);
     }
