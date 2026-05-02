@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Premium QR Studio - Smart Preview</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="QR Studio">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root { 
@@ -144,9 +150,12 @@
 
 <div class="app-container">
     <div class="controls">
-        <div>
-            <h2>Premium QR Studio</h2>
-            <p class="subtitle">專業級高品質設計工作站</p>
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <img src="logo.png" alt="App Logo" style="width: 50px; height: 50px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <div>
+                <h2 style="margin-bottom: 2px;">Premium QR Studio</h2>
+                <p class="subtitle" style="margin-bottom: 0;">專業級高品質設計工作站</p>
+            </div>
         </div>
         
         <div class="control-grid">
@@ -240,15 +249,26 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(qrImg, padding, padding, qrSize, qrSize);
 
+            let logoImgToDraw = null;
             if (logoFile) {
-                const img = await readAsImage(logoFile);
+                logoImgToDraw = await readAsImage(logoFile);
+            } else {
+                logoImgToDraw = await new Promise(res => {
+                    const i = new Image();
+                    i.onload = () => res(i);
+                    i.onerror = () => res(null);
+                    i.src = 'logo.png';
+                });
+            }
+
+            if (logoImgToDraw) {
                 const s = qrSize * logoScale;
                 const x = (canvas.width - s) / 2, y = padding + (qrSize - s) / 2;
                 ctx.fillStyle = bgCol;
                 ctx.beginPath();
                 ctx.roundRect(x - 8, y - 8, s + 16, s + 16, 12);
                 ctx.fill();
-                ctx.drawImage(img, x, y, s, s);
+                ctx.drawImage(logoImgToDraw, x, y, s, s);
             }
             ctx.fillStyle = txtCol;
             ctx.textAlign = "center";
