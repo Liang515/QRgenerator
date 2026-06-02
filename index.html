@@ -241,6 +241,7 @@
                 order: -1; 
                 border-bottom: 1px solid var(--border);
                 padding: 50px 20px 20px 20px;
+                overflow: hidden; /* 防止收合時 Canvas 等元素溢出遮擋下方 controls */
             }
 
             .preview.collapsed {
@@ -254,6 +255,7 @@
                 opacity: 0; 
                 transform: scale(0.8);
                 pointer-events: none;
+                display: none; /* 徹底隱藏，釋放點擊與排版空間 */
             }
 
             .toggle-preview { display: block; }
