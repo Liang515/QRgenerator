@@ -798,10 +798,14 @@
                         <label>Logo 大小比例 <span id="logoVal">22</span>%</label>
                         <input type="range" id="logoSlider" min="15" max="30" value="22">
                     </div>
-                    
                     <div class="input-group" id="logoRadiusGroup">
                         <label>Logo 圓角弧度 <span id="logoRadiusVal">14</span></label>
                         <input type="range" id="logoRadiusSlider" min="0" max="25" value="14">
+                    </div>
+                    
+                    <div class="input-group" id="logoZoomGroup">
+                        <label>Logo 縮放裁剪 <span id="logoZoomVal">1.20</span>x</label>
+                        <input type="range" id="logoZoomSlider" min="1.0" max="1.5" step="0.05" value="1.20">
                     </div>
                 </div>
             </details>
@@ -932,19 +936,23 @@
         const uploadGroup = document.getElementById('uploadGroup');
         const logoScaleGroup = document.getElementById('logoScaleGroup');
         const logoRadiusGroup = document.getElementById('logoRadiusGroup');
+        const logoZoomGroup = document.getElementById('logoZoomGroup');
 
         if (mode === 'none') {
             uploadGroup.style.display = 'none';
             logoScaleGroup.style.display = 'none';
             logoRadiusGroup.style.display = 'none';
+            logoZoomGroup.style.display = 'none';
         } else if (mode === 'custom') {
             uploadGroup.style.display = 'flex';
             logoScaleGroup.style.display = 'flex';
             logoRadiusGroup.style.display = 'flex';
+            logoZoomGroup.style.display = 'flex';
         } else {
             uploadGroup.style.display = 'none';
             logoScaleGroup.style.display = 'flex';
             logoRadiusGroup.style.display = 'flex';
+            logoZoomGroup.style.display = 'flex';
         }
 
         render();
@@ -1021,7 +1029,7 @@
         };
     }
 
-    const ids = ['urlInput', 'descInput', 'qrSlider', 'fontSlider', 'gapSlider', 'logoSlider', 'logoRadiusSlider', 'qrColorDark', 'qrColorLight', 'textColor', 'bgColor', 'logoInput'];
+    const ids = ['urlInput', 'descInput', 'qrSlider', 'fontSlider', 'gapSlider', 'logoSlider', 'logoRadiusSlider', 'logoZoomSlider', 'qrColorDark', 'qrColorLight', 'textColor', 'bgColor', 'logoInput'];
     const debouncedRender = debounce(render, 80);
     ids.forEach(id => {
         const el = document.getElementById(id);
@@ -1037,6 +1045,7 @@
         const gap = parseInt(document.getElementById('gapSlider').value);
         const logoScale = parseInt(document.getElementById('logoSlider').value) / 100;
         const logoBorderRadius = parseInt(document.getElementById('logoRadiusSlider').value);
+        const logoZoom = parseFloat(document.getElementById('logoZoomSlider').value);
         
         const qrDark = document.getElementById('qrColorDark').value;
         const qrLight = document.getElementById('qrColorLight').value;
@@ -1050,6 +1059,7 @@
         document.getElementById('gapVal').innerText = gap;
         document.getElementById('logoVal').innerText = Math.round(logoScale * 100);
         document.getElementById('logoRadiusVal').innerText = logoBorderRadius;
+        document.getElementById('logoZoomVal').innerText = logoZoom.toFixed(2);
 
         if (!url) return;
         const canvas = document.getElementById('mainCanvas');
@@ -1138,8 +1148,11 @@
                     ctx.fillStyle = qrLight; 
                     ctx.fill();
                     
-                    // C. 繪入滿版 Logo 圖形
-                    ctx.drawImage(logoImgToDraw, x, y, s, s);
+                    // C. 繪入滿版 Logo 圖形 (以中心為基點進行放大裁剪，以消除圖片本身的邊角白框)
+                    const zS = s * logoZoom;
+                    const zX = x - (zS - s) / 2;
+                    const zY = y - (zS - s) / 2;
+                    ctx.drawImage(logoImgToDraw, zX, zY, zS, zS);
                     
                     ctx.restore();
                 }
