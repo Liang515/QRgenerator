@@ -1191,28 +1191,53 @@
         showToast("已成功下載高解析 PNG 成品！🚀");
     }
 
-    // --- 一鍵複製圖片到剪貼簿 (Clipboard API) ---
+    // --- 一鍵複製圖片到剪貼簿 (Clipboard API, 支援跨瀏覽器與安全手勢) ---
     function copyToClipboard() {
         const canvas = document.getElementById('mainCanvas');
+        
+        // 檢查瀏覽器是否支援剪貼簿寫入與 ClipboardItem
+        if (!navigator.clipboard || !window.ClipboardItem) {
+            showToast("您的瀏覽器或開啟方式（如直接按檔案打開而非使用伺服器）不支援複製，請直接下載！", true);
+            return;
+        }
+
         try {
-            canvas.toBlob(async (blob) => {
-                if (!blob) {
-                    showToast("影像轉換失敗！", true);
-                    return;
-                }
-                try {
-                    await navigator.clipboard.write([
-                        new ClipboardItem({ 'image/png': blob })
-                    ]);
+            // 使用 Promise 包裹 toBlob，直接傳給 ClipboardItem 構造函數
+            // 這能維持瀏覽器內部的 User Gesture（使用者手勢活性），相容 Chrome 與 Safari 限制
+            const item = new ClipboardItem({
+                'image/png': new Promise((resolve, reject) => {
+                    try {
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                resolve(blob);
+                            } else {
+                                reject(new Error("無法將畫布轉換為 Blob"));
+                            }
+                        }, 'image/png', 1.0);
+                    } catch (e) {
+                        reject(e);
+                    }
+                })
+            });
+
+            // 執行寫入
+            navigator.clipboard.write([item])
+                .then(() => {
                     showToast("圖片已複製到系統剪貼簿！✨");
-                } catch (err) {
-                    console.error("剪貼簿寫入失敗:", err);
-                    showToast("複製失敗，您的瀏覽器可能不支援，請點擊下載！", true);
-                }
-            }, 'image/png', 1.0);
+                })
+                .catch((err) => {
+                    console.error("剪貼簿寫入錯誤:", err);
+                    // 針對非安全上下文 (file:// 協議) 做提示
+                    if (window.location.protocol === 'file:') {
+                        showToast("複製失敗！file:// 協議不支援此功能，請使用 localhost 或直接下載！", true);
+                    } else {
+                        showToast("複製失敗，瀏覽器拒絕了寫入，請直接下載！", true);
+                    }
+                });
+
         } catch (e) {
-            console.error(e);
-            showToast("您的瀏覽器限制了複製操作，請改用下載！", true);
+            console.error("初始化剪貼簿項目失敗:", e);
+            showToast("瀏覽器限制了複製操作，請改用下載！", true);
         }
     }
 
