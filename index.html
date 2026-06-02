@@ -1128,24 +1128,17 @@
                     
                     ctx.save();
                     
-                    // A. 繪製 Logo 外部遮罩白卡片 (預防 QR 條碼與 Logo 混淆)
-                    ctx.fillStyle = qrLight; // 採用 QR 背景色做為 Logo 底卡片遮罩
-                    ctx.beginPath();
-                    const outerCardSize = s + 14;
-                    const outerCardX = x - 7;
-                    const outerCardY = y - 7;
-                    // 外卡片圓角相應變大，以維持視覺同心圓比例
-                    const outerRadius = Math.min(outerCardSize / 2, logoBorderRadius + 4);
-                    ctx.roundRect(outerCardX, outerCardY, outerCardSize, outerCardSize, outerRadius);
-                    ctx.fill();
-                    
-                    // B. 建立 Logo 圖形裁剪圓角
+                    // A. 建立 Logo 裁剪與背景圓角路徑 (大小與 Logo 完全相等，不向外延伸留多餘白邊)
                     ctx.beginPath();
                     const innerRadius = Math.min(s / 2, logoBorderRadius);
                     ctx.roundRect(x, y, s, s, innerRadius);
                     ctx.clip();
                     
-                    // C. 繪入 Logo 圖形
+                    // B. 填滿 Logo 底色 (預防透明 LOGO 被二維碼線條穿透)
+                    ctx.fillStyle = qrLight; 
+                    ctx.fill();
+                    
+                    // C. 繪入滿版 Logo 圖形
                     ctx.drawImage(logoImgToDraw, x, y, s, s);
                     
                     ctx.restore();
