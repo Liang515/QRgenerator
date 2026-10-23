@@ -44,7 +44,8 @@
             <button type="button" class="tab-btn" role="tab" id="tab-logo" data-tab="logo" aria-controls="panel-logo" aria-selected="false">LOGO</button>
         </div>
 
-        <section class="panel" id="panel-content" role="tabpanel" aria-labelledby="tab-content">
+        <section class="panel is-active" id="panel-content" role="tabpanel" aria-labelledby="tab-content">
+            <h3 class="panel-title">內容</h3>
             <div class="input-group">
                 <label for="urlInput">目標網址 (URL) 或文字</label>
                 <div class="input-with-actions">
@@ -62,7 +63,8 @@
             </div>
         </section>
 
-        <section class="panel" id="panel-style" role="tabpanel" aria-labelledby="tab-style" hidden>
+        <section class="panel" id="panel-style" role="tabpanel" aria-labelledby="tab-style">
+            <h3 class="panel-title">配色</h3>
             <!-- 快速預設組合 (由 presets.ts 產生) -->
             <div class="input-group">
                 <label>配色預設</label>
@@ -117,7 +119,8 @@
             </div>
         </section>
 
-        <section class="panel" id="panel-size" role="tabpanel" aria-labelledby="tab-size" hidden>
+        <section class="panel" id="panel-size" role="tabpanel" aria-labelledby="tab-size">
+            <h3 class="panel-title">尺寸與版面</h3>
             <div class="input-group">
                 <label for="qrSlider">QR Code 大小 <span id="qrVal">280</span></label>
                 <input type="range" id="qrSlider" min="180" max="500" value="280">
@@ -132,7 +135,8 @@
             </div>
         </section>
 
-        <section class="panel" id="panel-logo" role="tabpanel" aria-labelledby="tab-logo" hidden>
+        <section class="panel" id="panel-logo" role="tabpanel" aria-labelledby="tab-logo">
+            <h3 class="panel-title">中心 LOGO</h3>
             <div class="input-group">
                 <label>標誌展示模式</label>
                 <div class="logo-mode-grid" role="radiogroup" aria-label="標誌展示模式">

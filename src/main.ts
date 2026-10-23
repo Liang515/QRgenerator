@@ -210,7 +210,7 @@ function bindEvents(): void {
       tabs.forEach((t) => {
         const selected = t === tab;
         t.setAttribute('aria-selected', String(selected));
-        $(`panel-${t.dataset.tab}`).hidden = !selected;
+        $(`panel-${t.dataset.tab}`).classList.toggle('is-active', selected);
       });
     });
   });
