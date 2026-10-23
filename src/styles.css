@@ -26,6 +26,7 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 
 body { 
     font-family: 'Plus Jakarta Sans', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif; 
@@ -86,7 +87,7 @@ body {
     flex-direction: column;
     align-items: center; 
     justify-content: center; 
-    padding: 40px;
+    padding: 0;
     position: relative;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -165,145 +166,36 @@ body {
     100% { transform: scale(0.9); opacity: 0.6; }
 }
 
-/* 畫布容器 */
+/* 畫布容器：填滿預覽區，canvas 的顯示尺寸由 main.ts 依容器大小等比縮放 */
 .canvas-container {
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    max-width: 90%;
-    max-height: 80%;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 64px 24px 24px;
 }
 
 canvas { 
-    max-width: 100%; 
-    max-height: 100%; 
-    object-fit: contain; 
+    display: block;
     border-radius: var(--radius-lg); 
     box-shadow: 0 30px 70px rgba(45, 58, 70, 0.15); 
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     background: transparent;
 }
-canvas:hover {
-    transform: scale(1.01) translateY(-2px);
-}
-
-/* 收合按鈕 (預設桌機隱藏) */
-.toggle-preview {
-    display: none;
-    position: absolute; 
-    bottom: 20px; 
-    right: 20px;
-    background: var(--slate); 
-    color: white; 
-    border: none;
-    padding: 10px 20px; 
-    border-radius: 24px; 
-    font-weight: 700;
-    font-size: 14px; 
-    cursor: pointer; 
-    z-index: 100;
-    box-shadow: var(--shadow-md);
-    transition: all 0.2s;
-}
-.toggle-preview:hover {
-    background: var(--primary);
-    transform: translateY(-2px);
-}
-
-/* --- 手機版 RWD 邏輯 --- */
-@media (max-width: 850px) {
-    .app-container { flex-direction: column; height: 100dvh; width: 100%; border-radius: 0; border: none; }
-    
-    .preview { 
-        flex: 0 0 45vh; 
-        order: -1; 
-        border-bottom: 1px solid var(--border);
-        padding: 50px 20px 20px 20px;
-        overflow: hidden; /* 防止收合時 Canvas 等元素溢出遮擋下方 controls */
-    }
-
-    .preview.collapsed {
-        flex: 0 0 60px;
-        padding: 0;
-        background: var(--cream);
-    }
-
-    .preview.collapsed .canvas-container,
-    .preview.collapsed .preview-toolbar {
-        opacity: 0; 
-        transform: scale(0.8);
-        pointer-events: none;
-        display: none; /* 徹底隱藏，釋放點擊與排版空間 */
-    }
-
-    .toggle-preview { display: block; }
-    .preview.collapsed .toggle-preview { bottom: 10px; }
-
-    .controls { flex: 1; padding: 20px 16px; background: #FFFFFF; }
-    body { overflow: auto; }
-    
-    .preview-toolbar {
-        top: 10px;
-        padding: 4px 8px;
+@media (hover: hover) {
+    canvas:hover {
+        transform: scale(1.01) translateY(-2px);
     }
 }
+
 
 /* 標題與標誌 */
 h2 { font-size: var(--fs-h2); font-weight: 900; letter-spacing: -1px; color: var(--slate); }
 .subtitle { font-size: 13px; color: var(--text-muted); font-weight: 500; }
 
-/* 展開摺疊選單 (Details/Summary) Styling */
-details {
-    background: var(--cream-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: var(--shadow-sm);
-}
-details[open] {
-    box-shadow: var(--shadow-md);
-    border-color: rgba(36, 136, 234, 0.3);
-}
-
-summary {
-    padding: 18px 24px;
-    font-size: var(--fs-section);
-    font-weight: 800;
-    color: var(--slate);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    user-select: none;
-    background: #FFFFFF;
-    transition: background 0.2s;
-}
-summary:hover {
-    background: var(--slate-light);
-}
-summary::after {
-    content: "＋";
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--primary);
-    transition: transform 0.3s;
-}
-details[open] summary::after {
-    content: "－";
-    transform: rotate(90deg);
-}
-
-.details-content {
-    padding: 20px 24px 24px 24px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    background: #FAFBFB;
-}
 
 .input-group { display: flex; flex-direction: column; gap: 8px; }
 label { font-size: var(--fs-label); font-weight: 700; color: var(--slate); display: flex; justify-content: space-between; align-items: center; }
@@ -313,7 +205,7 @@ input[type="text"], textarea {
     padding: 14px 16px; 
     border: 2px solid var(--border); 
     border-radius: var(--radius-sm); 
-    font-size: 15px; 
+    font-size: 16px; /* 小於 16px 時 iOS 聚焦會自動放大頁面 */
     background: #FFFFFF; 
     transition: all 0.2s; 
     font-weight: 500;
@@ -518,7 +410,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .action-row {
     display: grid;
     grid-template-columns: 1.2fr 1fr;
-    gap: 15px;
+    gap: 12px;
     margin-top: auto;
     padding-top: 10px;
 }
@@ -613,7 +505,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
     border-radius: 14px;
     box-shadow: var(--shadow-sm);
 }
-.accordion { display: flex; flex-direction: column; gap: 16px; }
+
 
 textarea {
     font-family: inherit;
@@ -635,8 +527,9 @@ button.logo-mode-btn {
 .toolbar-btn:focus-visible,
 .btn-down:focus-visible,
 .btn-copy:focus-visible,
-.toggle-preview:focus-visible,
-summary:focus-visible {
+.tab-btn:focus-visible,
+.icon-btn:focus-visible,
+.btn-share:focus-visible {
     outline: 3px solid rgba(36, 136, 234, 0.45);
     outline-offset: 2px;
 }
@@ -696,4 +589,213 @@ summary:focus-visible {
     border-radius: 50%;
     display: inline-block;
     animation: pulse 1.8s infinite ease-in-out;
+}
+
+/* --- 分頁式設定 (取代原本的手風琴選單) --- */
+.tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    padding: 4px;
+    background: var(--slate-light);
+    border-radius: var(--radius-md);
+}
+.tab-btn {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    min-height: 44px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.tab-btn[aria-selected="true"] {
+    background: #FFFFFF;
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 4px 2px;
+}
+.panel[hidden] { display: none; }
+
+/* 網址欄：右側貼上／清除按鈕 */
+.input-with-actions { position: relative; }
+.input-with-actions input { padding-right: 104px; }
+.input-actions {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 4px;
+}
+.icon-btn {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--primary-light);
+    border: none;
+    border-radius: 10px;
+    min-width: 40px;
+    height: 36px;
+    padding: 0 10px;
+    cursor: pointer;
+}
+.icon-btn.subtle { color: var(--text-muted); background: transparent; }
+.icon-btn[hidden] { display: none; }
+
+/* 分享按鈕 (僅在支援 Web Share 檔案分享的裝置顯示) */
+.btn-share {
+    font-family: inherit;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 2px solid rgba(36, 136, 234, 0.25);
+    padding: 16px 18px;
+    border-radius: var(--radius-md);
+    font-weight: 800;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.btn-share[hidden] { display: none; }
+.btn-share:disabled { opacity: 0.45; cursor: not-allowed; }
+.action-row.has-share { grid-template-columns: 1fr 1fr 1fr; }
+.btn-down, .btn-copy { font-family: inherit; }
+
+/* 觸控裝置：滑桿把手放大，方便手指拖曳 */
+@media (pointer: coarse) {
+    input[type="range"] { height: 8px; margin: 16px 0; }
+    input[type="range"]::-webkit-slider-thumb { width: 30px; height: 30px; }
+}
+
+/* --- 手機版：預覽固定在上方，設定分頁在中間，操作列固定在底部 --- */
+@media (max-width: 850px) {
+    :root { --preview-h: clamp(220px, 36dvh, 340px); --tabs-h: 60px; --bar-h: 84px; }
+
+    body {
+        display: block;
+        height: auto;
+        min-height: 100dvh;
+        overflow: auto;
+        background: #FFFFFF;
+    }
+    .app-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+        min-height: 100dvh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        overflow: visible;
+        background: #FFFFFF;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+    /* 讓 controls 的子元素直接參與外層排版，才能把預覽插在 header 與分頁之間 */
+    .controls { display: contents; }
+
+    .app-header {
+        order: 0;
+        gap: 10px;
+        margin: 0;
+        padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+    }
+    .app-header img { width: 34px; height: 34px; border-radius: 9px; }
+    .app-header h2 { font-size: 20px; letter-spacing: -0.5px; }
+    .app-header .subtitle { display: none; }
+
+    .preview {
+        order: 1;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        flex: none;
+        height: var(--preview-h);
+        padding: 0;
+        border-bottom: 1px solid var(--border);
+        background: #F7F9FC;
+    }
+    .preview-toolbar { display: none; }
+    .canvas-container { padding: 14px 16px; }
+    canvas { border-radius: 14px; box-shadow: 0 10px 30px rgba(45, 58, 70, 0.14); }
+    .qr-error { margin: auto; max-width: 280px; font-size: 14px; padding: 16px; }
+    .preview.has-error { justify-content: center; }
+
+    .tabs {
+        order: 2;
+        position: sticky;
+        top: var(--preview-h);
+        z-index: 15;
+        margin: 0;
+        border-radius: 0;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        gap: 6px;
+    }
+    .tab-btn { background: var(--slate-light); }
+    .tab-btn[aria-selected="true"] { background: var(--primary); color: #FFFFFF; box-shadow: none; }
+
+    .panel {
+        order: 3;
+        padding: 18px 16px calc(var(--bar-h) + 24px + env(safe-area-inset-bottom));
+        gap: 20px;
+    }
+
+    /* 配色預設改成可左右滑動的一列 */
+    .preset-grid {
+        display: flex;
+        overflow-x: auto;
+        gap: 10px;
+        margin: 0 -16px;
+        padding: 2px 16px 6px;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+    }
+    .preset-grid::-webkit-scrollbar { display: none; }
+    .preset-card { flex: 0 0 104px; scroll-snap-align: start; }
+
+    .action-row {
+        order: 4;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 30;
+        margin: 0;
+        gap: 8px;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -8px 24px rgba(45, 58, 70, 0.06);
+    }
+    .btn-down, .btn-copy, .btn-share {
+        padding: 0 10px;
+        min-height: 52px;
+        font-size: 15px;
+        border-radius: 14px;
+        box-shadow: none;
+        gap: 6px;
+    }
+    .btn-down:hover, .btn-copy:hover { transform: none; }
+
+    .toast { top: calc(-100px - env(safe-area-inset-top)); max-width: calc(100% - 32px); }
+    .toast.show { top: calc(12px + env(safe-area-inset-top)); }
 }

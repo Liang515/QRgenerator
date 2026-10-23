@@ -9,6 +9,8 @@ type LogoSource = HTMLImageElement | ImageBitmap;
 
 let defaultLogo: LogoSource | null = null;
 let customLogo: LogoSource | null = null;
+/** 每次換自訂圖片就 +1，讓預先產生的分享檔知道要重做 */
+export let customLogoVersion = 0;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -36,6 +38,7 @@ export async function loadCustomLogo(file: File): Promise<void> {
   } else {
     customLogo = await createImageBitmap(file);
   }
+  customLogoVersion++;
 }
 
 export function getLogo(mode: 'default' | 'custom' | 'none'): LogoSource | null {

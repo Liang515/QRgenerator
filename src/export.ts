@@ -2,7 +2,7 @@
 
 import type { AppState } from './state';
 import { encodeQr } from './qr';
-import { getLogo } from './logo';
+import { customLogoVersion, getLogo } from './logo';
 import { drawPoster } from './renderer';
 
 /** 匯出倍率：QR 280 時輸出寬度為 (280 + 120) × 3 = 1200px，足以印刷 */
@@ -51,4 +51,34 @@ export function copyPng(s: AppState): Promise<void> {
   }
   const blob = Promise.resolve().then(() => toPngBlob(renderExport(s)));
   return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+}
+
+// --- 分享 (Web Share API) ---
+
+let prepared: { key: string; file: File } | null = null;
+
+export function canShareFiles(): boolean {
+  if (typeof navigator.canShare !== 'function') return false;
+  const probe = new File([new Uint8Array(1)], 'probe.png', { type: 'image/png' });
+  return navigator.canShare({ files: [probe] });
+}
+
+/** 預先產生要分享的檔案，讓點擊時能立即呼叫 navigator.share (iOS 要求在使用者手勢內) */
+export async function prepareShareFile(s: AppState): Promise<void> {
+  const key = JSON.stringify(s) + customLogoVersion;
+  if (prepared?.key === key) return;
+  try {
+    const blob = await toPngBlob(renderExport(s));
+    prepared = { key, file: new File([blob], `QRGen_${timestamp()}.png`, { type: 'image/png' }) };
+  } catch {
+    prepared = null;
+  }
+}
+
+export async function sharePng(s: AppState): Promise<void> {
+  const key = JSON.stringify(s) + customLogoVersion;
+  if (prepared?.key !== key) await prepareShareFile(s);
+  if (!prepared) throw new Error('無法產生圖片');
+  // 只傳檔案：同時附文字時，部分 App (例如 LINE) 會只收文字而丟掉圖片
+  await navigator.share({ files: [prepared.file] });
 }

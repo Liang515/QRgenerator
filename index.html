@@ -36,153 +36,151 @@
             </div>
         </header>
 
-        <!-- 手風琴控制群組 -->
-        <div class="accordion">
-
-            <!-- 1. 內容設定 -->
-            <details open>
-                <summary>📝 內容設定</summary>
-                <div class="details-content">
-                    <div class="input-group">
-                        <label for="urlInput">目標網址 (URL) 或文字</label>
-                        <input type="text" id="urlInput" value="https://google.com" placeholder="例如：https://yourdomain.com" autocomplete="url" spellcheck="false">
-                    </div>
-                    <div class="input-group">
-                        <label for="descInput">底部描述文字</label>
-                        <textarea id="descInput" rows="2" placeholder="輸入要顯示在下方的宣傳文字">請掃描進入官方網站</textarea>
-                        <span class="field-hint">可按 Enter 手動換行</span>
-                    </div>
-                </div>
-            </details>
-
-            <!-- 2. 風格與色彩 -->
-            <details>
-                <summary>🎨 風格與色彩</summary>
-                <div class="details-content">
-                    <!-- 快速預設組合 (由 presets.ts 產生) -->
-                    <div class="input-group">
-                        <label>配色預設</label>
-                        <div class="preset-grid" id="presetGrid"></div>
-                    </div>
-
-                    <!-- 自訂條碼色彩 -->
-                    <div class="input-group">
-                        <label>條碼色彩配置</label>
-                        <div class="color-row">
-                            <div class="color-item">
-                                <label class="sub-label" for="qrColorDark">條碼前景色 (Dark)</label>
-                                <div class="color-picker-wrapper">
-                                    <div class="color-preview-block" id="qrDarkPreview"></div>
-                                    <span class="color-hex-text" id="qrDarkHex"></span>
-                                    <input type="color" id="qrColorDark" value="#2D3A44">
-                                </div>
-                            </div>
-                            <div class="color-item">
-                                <label class="sub-label" for="qrColorLight">條碼背景色 (Light)</label>
-                                <div class="color-picker-wrapper">
-                                    <div class="color-preview-block" id="qrLightPreview"></div>
-                                    <span class="color-hex-text" id="qrLightHex"></span>
-                                    <input type="color" id="qrColorLight" value="#FAF8F5">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="contrast-warning" id="contrastWarning" role="alert"></div>
-                    </div>
-
-                    <!-- 自訂畫布色彩 -->
-                    <div class="input-group">
-                        <label>整體畫布色彩</label>
-                        <div class="color-row">
-                            <div class="color-item">
-                                <label class="sub-label" for="textColor">文字顏色 (Text)</label>
-                                <div class="color-picker-wrapper">
-                                    <div class="color-preview-block" id="textColPreview"></div>
-                                    <span class="color-hex-text" id="textColHex"></span>
-                                    <input type="color" id="textColor" value="#2D3A44">
-                                </div>
-                            </div>
-                            <div class="color-item">
-                                <label class="sub-label" for="bgColor">海報背景色 (Canvas)</label>
-                                <div class="color-picker-wrapper">
-                                    <div class="color-preview-block" id="bgColPreview"></div>
-                                    <span class="color-hex-text" id="bgColHex"></span>
-                                    <input type="color" id="bgColor" value="#FAF8F5">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </details>
-
-            <!-- 3. 尺寸與版面 -->
-            <details>
-                <summary>📐 尺寸與佈局</summary>
-                <div class="details-content">
-                    <div class="input-group">
-                        <label for="qrSlider">QR Code 大小 <span id="qrVal">280</span></label>
-                        <input type="range" id="qrSlider" min="180" max="500" value="280">
-                    </div>
-                    <div class="input-group">
-                        <label for="fontSlider">描述文字大小 <span id="fontVal">22</span></label>
-                        <input type="range" id="fontSlider" min="14" max="50" value="22">
-                    </div>
-                    <div class="input-group">
-                        <label for="gapSlider">條碼文字垂直間隔 <span id="gapVal">25</span></label>
-                        <input type="range" id="gapSlider" min="10" max="80" value="25">
-                    </div>
-                </div>
-            </details>
-
-            <!-- 4. 中心標誌 LOGO -->
-            <details>
-                <summary>🖼 中心標誌 LOGO</summary>
-                <div class="details-content">
-                    <div class="input-group">
-                        <label>標誌展示模式</label>
-                        <div class="logo-mode-grid" role="radiogroup" aria-label="標誌展示模式">
-                            <button type="button" class="logo-mode-btn" data-mode="default" role="radio">預設 LOGO</button>
-                            <button type="button" class="logo-mode-btn" data-mode="custom" role="radio">自訂圖片</button>
-                            <button type="button" class="logo-mode-btn" data-mode="none" role="radio">不使用</button>
-                        </div>
-                    </div>
-
-                    <!-- 上傳區 (custom 模式才顯示) -->
-                    <div class="input-group" id="uploadGroup" hidden>
-                        <label for="logoInput">上傳中心 LOGO</label>
-                        <div class="file-upload-wrapper">
-                            <input type="file" id="logoInput" accept="image/*">
-                            <div class="file-upload-text">
-                                <span id="uploadStatusMain">拖放圖片至此或 <b>點擊瀏覽</b></span><br>
-                                <span id="uploadStatusSub" style="font-size:11px; opacity:0.7;">支援 PNG, JPG, SVG</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="input-group logo-option">
-                        <label for="logoSlider">Logo 大小比例 <span id="logoVal">22%</span></label>
-                        <input type="range" id="logoSlider" min="15" max="30" value="22">
-                    </div>
-                    <div class="input-group logo-option">
-                        <label for="logoRadiusSlider">Logo 圓角弧度 <span id="logoRadiusVal">14</span></label>
-                        <input type="range" id="logoRadiusSlider" min="0" max="25" value="14">
-                    </div>
-                    <div class="input-group logo-option">
-                        <label for="logoZoomSlider">Logo 縮放裁剪 <span id="logoZoomVal">1.00x</span></label>
-                        <input type="range" id="logoZoomSlider" min="1.0" max="1.5" step="0.05" value="1.00">
-                    </div>
-                </div>
-            </details>
+        <!-- 設定分頁 -->
+        <div class="tabs" role="tablist" aria-label="設定">
+            <button type="button" class="tab-btn" role="tab" id="tab-content" data-tab="content" aria-controls="panel-content" aria-selected="true">內容</button>
+            <button type="button" class="tab-btn" role="tab" id="tab-style" data-tab="style" aria-controls="panel-style" aria-selected="false">配色</button>
+            <button type="button" class="tab-btn" role="tab" id="tab-size" data-tab="size" aria-controls="panel-size" aria-selected="false">尺寸</button>
+            <button type="button" class="tab-btn" role="tab" id="tab-logo" data-tab="logo" aria-controls="panel-logo" aria-selected="false">LOGO</button>
         </div>
 
+        <section class="panel" id="panel-content" role="tabpanel" aria-labelledby="tab-content">
+            <div class="input-group">
+                <label for="urlInput">目標網址 (URL) 或文字</label>
+                <div class="input-with-actions">
+                    <input type="text" id="urlInput" value="https://google.com" placeholder="https://yourdomain.com" inputmode="url" autocomplete="url" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done">
+                    <div class="input-actions">
+                        <button type="button" class="icon-btn" id="pasteBtn" hidden>貼上</button>
+                        <button type="button" class="icon-btn subtle" id="clearUrlBtn" aria-label="清除網址">✕</button>
+                    </div>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="descInput">底部描述文字</label>
+                <textarea id="descInput" rows="2" placeholder="輸入要顯示在下方的宣傳文字">請掃描進入官方網站</textarea>
+                <span class="field-hint">可按 Enter 手動換行</span>
+            </div>
+        </section>
+
+        <section class="panel" id="panel-style" role="tabpanel" aria-labelledby="tab-style" hidden>
+            <!-- 快速預設組合 (由 presets.ts 產生) -->
+            <div class="input-group">
+                <label>配色預設</label>
+                <div class="preset-grid" id="presetGrid"></div>
+            </div>
+
+            <!-- 自訂條碼色彩 -->
+            <div class="input-group">
+                <label>條碼色彩配置</label>
+                <div class="color-row">
+                    <div class="color-item">
+                        <label class="sub-label" for="qrColorDark">條碼前景色 (Dark)</label>
+                        <div class="color-picker-wrapper">
+                            <div class="color-preview-block" id="qrDarkPreview"></div>
+                            <span class="color-hex-text" id="qrDarkHex"></span>
+                            <input type="color" id="qrColorDark" value="#2D3A44">
+                        </div>
+                    </div>
+                    <div class="color-item">
+                        <label class="sub-label" for="qrColorLight">條碼背景色 (Light)</label>
+                        <div class="color-picker-wrapper">
+                            <div class="color-preview-block" id="qrLightPreview"></div>
+                            <span class="color-hex-text" id="qrLightHex"></span>
+                            <input type="color" id="qrColorLight" value="#FAF8F5">
+                        </div>
+                    </div>
+                </div>
+                <div class="contrast-warning" id="contrastWarning" role="alert"></div>
+            </div>
+
+            <!-- 自訂畫布色彩 -->
+            <div class="input-group">
+                <label>整體畫布色彩</label>
+                <div class="color-row">
+                    <div class="color-item">
+                        <label class="sub-label" for="textColor">文字顏色 (Text)</label>
+                        <div class="color-picker-wrapper">
+                            <div class="color-preview-block" id="textColPreview"></div>
+                            <span class="color-hex-text" id="textColHex"></span>
+                            <input type="color" id="textColor" value="#2D3A44">
+                        </div>
+                    </div>
+                    <div class="color-item">
+                        <label class="sub-label" for="bgColor">海報背景色 (Canvas)</label>
+                        <div class="color-picker-wrapper">
+                            <div class="color-preview-block" id="bgColPreview"></div>
+                            <span class="color-hex-text" id="bgColHex"></span>
+                            <input type="color" id="bgColor" value="#FAF8F5">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel" id="panel-size" role="tabpanel" aria-labelledby="tab-size" hidden>
+            <div class="input-group">
+                <label for="qrSlider">QR Code 大小 <span id="qrVal">280</span></label>
+                <input type="range" id="qrSlider" min="180" max="500" value="280">
+            </div>
+            <div class="input-group">
+                <label for="fontSlider">描述文字大小 <span id="fontVal">22</span></label>
+                <input type="range" id="fontSlider" min="14" max="50" value="22">
+            </div>
+            <div class="input-group">
+                <label for="gapSlider">條碼文字垂直間隔 <span id="gapVal">25</span></label>
+                <input type="range" id="gapSlider" min="10" max="80" value="25">
+            </div>
+        </section>
+
+        <section class="panel" id="panel-logo" role="tabpanel" aria-labelledby="tab-logo" hidden>
+            <div class="input-group">
+                <label>標誌展示模式</label>
+                <div class="logo-mode-grid" role="radiogroup" aria-label="標誌展示模式">
+                    <button type="button" class="logo-mode-btn" data-mode="default" role="radio">預設 LOGO</button>
+                    <button type="button" class="logo-mode-btn" data-mode="custom" role="radio">自訂圖片</button>
+                    <button type="button" class="logo-mode-btn" data-mode="none" role="radio">不使用</button>
+                </div>
+            </div>
+
+            <!-- 上傳區 (custom 模式才顯示) -->
+            <div class="input-group" id="uploadGroup" hidden>
+                <label for="logoInput">上傳中心 LOGO</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="logoInput" accept="image/*">
+                    <div class="file-upload-text">
+                        <span id="uploadStatusMain">拖放圖片至此或 <b>點擊瀏覽</b></span><br>
+                        <span id="uploadStatusSub" style="font-size:11px; opacity:0.7;">支援 PNG, JPG, SVG</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group logo-option">
+                <label for="logoSlider">Logo 大小比例 <span id="logoVal">22%</span></label>
+                <input type="range" id="logoSlider" min="15" max="30" value="22">
+            </div>
+            <div class="input-group logo-option">
+                <label for="logoRadiusSlider">Logo 圓角弧度 <span id="logoRadiusVal">14</span></label>
+                <input type="range" id="logoRadiusSlider" min="0" max="25" value="14">
+            </div>
+            <div class="input-group logo-option">
+                <label for="logoZoomSlider">Logo 縮放裁剪 <span id="logoZoomVal">1.00x</span></label>
+                <input type="range" id="logoZoomSlider" min="1.0" max="1.5" step="0.05" value="1.00">
+            </div>
+        </section>
+
         <!-- 操作按鈕列 -->
-        <div class="action-row">
+        <div class="action-row" id="actionRow">
+            <button type="button" class="btn-share" id="shareBtn" hidden>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                分享
+            </button>
             <button type="button" class="btn-down" id="downloadBtn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                下載 PNG
+                下載
             </button>
             <button type="button" class="btn-copy" id="copyBtn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                複製圖片
+                複製
             </button>
         </div>
     </div>
@@ -203,8 +201,6 @@
                 即時預覽
             </span>
         </div>
-
-        <button type="button" class="toggle-preview" id="toggleBtn">收合預覽 ✕</button>
 
         <div class="qr-error" id="qrError" role="alert"></div>
         <div class="canvas-container">

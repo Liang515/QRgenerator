@@ -5,7 +5,7 @@ import { encodeQr } from './qr';
 import { defaultLogoUrl, getLogo, loadCustomLogo, loadDefaultLogo } from './logo';
 import { drawPoster } from './renderer';
 import { checkQrColors } from './contrast';
-import { copyPng, downloadPng } from './export';
+import { copyPng, downloadPng, canShareFiles, prepareShareFile, sharePng } from './export';
 import { showToast } from './ui/toast';
 import { colorPickers, syncColorPickers } from './ui/colorPicker';
 
@@ -35,16 +35,31 @@ function render(): void {
   preview.classList.toggle('has-error', !qr.ok);
   $<HTMLButtonElement>('downloadBtn').disabled = !qr.ok;
   $<HTMLButtonElement>('copyBtn').disabled = !qr.ok;
+  $<HTMLButtonElement>('shareBtn').disabled = !qr.ok;
+  $('clearUrlBtn').hidden = !s.url;
   if (!qr.ok) {
     $('qrError').textContent = qr.reason;
   } else {
-    const canvas = $<HTMLCanvasElement>('mainCanvas');
-    const { width, height } = drawPoster(canvas, s, qr, getLogo(s.logoMode), window.devicePixelRatio || 1);
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+    posterSize = drawPoster($<HTMLCanvasElement>('mainCanvas'), s, qr, getLogo(s.logoMode), window.devicePixelRatio || 1);
+    fitCanvas();
+    if (canShareFiles()) debouncedPrepareShare();
   }
 
   saveState(s);
+}
+
+// --- 預覽縮放：依預覽區可用空間等比縮小 (不放大)，手機上整張海報都看得到 ---
+let posterSize = { width: 0, height: 0 };
+function fitCanvas(): void {
+  const box = document.querySelector<HTMLElement>('.canvas-container');
+  if (!box || !posterSize.width) return;
+  const cs = getComputedStyle(box);
+  const availW = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const availH = box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const k = Math.min(1, availW / posterSize.width, availH / posterSize.height);
+  const canvas = $<HTMLCanvasElement>('mainCanvas');
+  canvas.style.width = `${Math.floor(posterSize.width * k)}px`;
+  canvas.style.height = `${Math.floor(posterSize.height * k)}px`;
 }
 
 function debounce<A extends unknown[]>(fn: (...args: A) => void, ms: number) {
@@ -55,6 +70,8 @@ function debounce<A extends unknown[]>(fn: (...args: A) => void, ms: number) {
   };
 }
 const debouncedRender = debounce(render, 60);
+// iOS Safari 要求 navigator.share 在點擊當下呼叫，所以預先把要分享的 PNG 準備好
+const debouncedPrepareShare = debounce(() => prepareShareFile(currentState()), 400);
 
 // --- 配色預設 ---
 function buildPresetCards(): void {
@@ -186,10 +203,57 @@ function bindEvents(): void {
     $('gridToggle').setAttribute('aria-pressed', String(!hidden));
   });
 
-  $('toggleBtn').addEventListener('click', () => {
-    const collapsed = $('previewArea').classList.toggle('collapsed');
-    $('toggleBtn').textContent = collapsed ? '展開預覽 👁️' : '收合預覽 ✕';
+  // 設定分頁
+  const tabs = document.querySelectorAll<HTMLButtonElement>('.tab-btn');
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => {
+        const selected = t === tab;
+        t.setAttribute('aria-selected', String(selected));
+        $(`panel-${t.dataset.tab}`).hidden = !selected;
+      });
+    });
   });
+
+  // 網址欄：貼上與清除
+  const urlInput = $<HTMLInputElement>('urlInput');
+  if (navigator.clipboard?.readText) {
+    $('pasteBtn').hidden = false;
+    $('pasteBtn').addEventListener('click', async () => {
+      try {
+        const text = (await navigator.clipboard.readText()).trim();
+        if (!text) return showToast('剪貼簿是空的', true);
+        urlInput.value = text;
+        render();
+      } catch {
+        showToast('無法讀取剪貼簿，請長按輸入框手動貼上', true);
+      }
+    });
+  }
+  $('clearUrlBtn').addEventListener('click', () => {
+    urlInput.value = '';
+    render();
+    urlInput.focus();
+  });
+  // 手機鍵盤按「完成」時收起鍵盤
+  urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') urlInput.blur();
+  });
+
+  // 分享 (手機上可直接傳到 LINE、存到相簿)
+  if (canShareFiles()) {
+    $('shareBtn').hidden = false;
+    $('actionRow').classList.add('has-share');
+    $('shareBtn').addEventListener('click', () => {
+      sharePng(currentState()).catch((err: Error) => {
+        if (err.name === 'AbortError') return; // 使用者自己關掉分享選單
+        console.error('分享失敗:', err);
+        showToast('分享失敗，請改用下載', true);
+      });
+    });
+  }
+
+  new ResizeObserver(fitCanvas).observe(document.querySelector('.canvas-container')!);
 
   // 螢幕倍率改變 (例如視窗拖到另一個螢幕) 時重繪，維持清晰度
   matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener('change', render);
