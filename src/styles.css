@@ -690,7 +690,8 @@ button.logo-mode-btn {
 
 /* --- 手機版：預覽固定在上方，設定分頁在中間，操作列固定在底部 --- */
 @media (max-width: 850px) {
-    :root { --preview-h: clamp(220px, 36dvh, 340px); --tabs-h: 60px; --bar-h: 84px; }
+    :root { --preview-h: clamp(220px, 36dvh, 340px); --tabs-h: 60px; --bar-h: 76px; }
+    html { background: #FFFFFF; }
 
     body {
         display: block;
@@ -790,7 +791,8 @@ button.logo-mode-btn {
         z-index: 30;
         margin: 0;
         gap: 8px;
-        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+        /* 按鈕貼近 Home 指示條，只保留最少的安全距離，避免底部大片留白 */
+        padding: 10px 12px max(10px, calc(env(safe-area-inset-bottom) - 14px));
         background: rgba(255, 255, 255, 0.96);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
