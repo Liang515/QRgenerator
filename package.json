@@ -1,0 +1,19 @@
+{
+  "name": "qr-gen-studio",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-singlefile": "^2.3.4"
+  },
+  "dependencies": {
+    "qrcode-generator": "^2.0.4"
+  }
+}

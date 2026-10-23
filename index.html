@@ -2,662 +2,55 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Premium QR Studio - 專業級設計工作站</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>QR Gen Studio - QR Code 產生器</title>
+    <meta name="theme-color" content="#2488EA">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="QR Studio">
-    <link rel="apple-touch-icon" href="logo.png">
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- Google Fonts: Plus Jakarta Sans for numbers & English, and PingFang/Noto Sans for TC -->
+    <meta name="apple-mobile-web-app-title" content="QR Gen">
+    <link rel="apple-touch-icon" href="./icons/icon-180.png">
+    <link rel="icon" type="image/png" href="./icons/icon-192.png">
+    <link rel="manifest" href="./manifest.json">
+
+    <!-- Google Fonts: Plus Jakarta Sans 用於數字與英文，Noto Sans TC 用於中文 (離線時會退回系統字型) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
-    
-    <!-- QRCode.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
-    <style>
-        :root { 
-            --primary: #599E82;        /* 翡翠綠 (品牌主色) */
-            --primary-hover: #47836b;
-            --primary-light: #EAF3F0;
-            --slate: #2D3A44;          /* 深石板藍 (高對比字體與背景) */
-            --slate-hover: #1e2830;
-            --slate-light: #F4F6F5;
-            --cream: #FAF7F2;          /* 質感奶油白 (主要背景) */
-            --cream-card: #FFFFFF;     /* 卡片背景 */
-            --bg: #F3ECE3;             /* 漸層外底色 */
-            --border: #E8E2D7;         /* 細緻邊框 */
-            --text: #2D3A44;           /* 主要文字色 */
-            --text-muted: #6E7E8C;     /* 輔助文字色 */
-            
-            --radius-lg: 24px;
-            --radius-md: 16px;
-            --radius-sm: 12px;
-            
-            --shadow-sm: 0 4px 12px rgba(45, 58, 70, 0.04);
-            --shadow-md: 0 12px 36px rgba(45, 58, 70, 0.08);
-            --shadow-lg: 0 24px 60px rgba(45, 58, 70, 0.12);
-            
-            --fs-h2: clamp(1.6rem, 2.2vw, 2.2rem);
-            --fs-section: clamp(16px, 1.3vw, 19px);
-            --fs-label: clamp(14px, 1.1vw, 16px);
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body { 
-            font-family: 'Plus Jakarta Sans', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif; 
-            background: radial-gradient(circle at 10% 20%, var(--cream) 0%, var(--bg) 100%); 
-            height: 100vh; 
-            width: 100vw;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            overflow: hidden; 
-            color: var(--text);
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* 應用程式主容器 */
-        .app-container {
-            display: flex; 
-            background: rgba(255, 255, 255, 0.85); 
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            width: 96vw; 
-            height: 94vh;
-            border-radius: 32px; 
-            box-shadow: var(--shadow-lg); 
-            overflow: hidden; 
-            position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-        }
-
-        /* --- 左側控制面板 --- */
-        .controls {
-            flex: 1.3; 
-            padding: clamp(24px, 3.5vw, 40px); 
-            display: flex; 
-            flex-direction: column; 
-            gap: 20px; 
-            border-right: 1px solid var(--border); 
-            overflow-y: auto; 
-            background: rgba(255, 255, 255, 0.4); 
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
-        }
-        
-        .controls::-webkit-scrollbar {
-            width: 6px;
-        }
-        .controls::-webkit-scrollbar-thumb {
-            background-color: var(--border);
-            border-radius: 10px;
-        }
-
-        /* --- 右側預覽區 (設計師畫布) --- */
-        .preview {
-            flex: 1; 
-            background: #FDFDFD; 
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            justify-content: center; 
-            padding: 40px;
-            position: relative;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        /* 網格背景紋理 */
-        .preview-grid-bg {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: 
-                linear-gradient(to right, rgba(45, 58, 68, 0.05) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(45, 58, 68, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-            pointer-events: none;
-            transition: opacity 0.3s;
-            opacity: 1;
-        }
-        .preview.no-grid .preview-grid-bg {
-            opacity: 0;
-        }
-
-        /* 預覽區浮動控制條 */
-        .preview-toolbar {
-            position: absolute;
-            top: 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 6px 12px;
-            border-radius: 30px;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-        }
-
-        .toolbar-btn {
-            background: transparent;
-            border: none;
-            color: var(--slate);
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            padding: 6px 14px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-        }
-        .toolbar-btn:hover {
-            background: var(--slate-light);
-            color: var(--primary);
-        }
-        .toolbar-btn.active {
-            background: var(--primary-light);
-            color: var(--primary);
-        }
-
-        /* 靜態標籤狀態 */
-        .toolbar-badge {
-            color: var(--text-muted);
-            font-size: 11px;
-            font-weight: 700;
-            padding: 6px 14px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--slate-light);
-            border-radius: 20px;
-            user-select: none;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(0.9); opacity: 0.6; }
-            50% { transform: scale(1.15); opacity: 1; }
-            100% { transform: scale(0.9); opacity: 0.6; }
-        }
-
-        /* 畫布容器 */
-        .canvas-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            max-width: 90%;
-            max-height: 80%;
-        }
-
-        canvas { 
-            max-width: 100%; 
-            max-height: 100%; 
-            object-fit: contain; 
-            border-radius: var(--radius-lg); 
-            box-shadow: 0 30px 70px rgba(45, 58, 70, 0.15); 
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            background: transparent;
-        }
-        canvas:hover {
-            transform: scale(1.01) translateY(-2px);
-        }
-
-        /* 收合按鈕 (預設桌機隱藏) */
-        .toggle-preview {
-            display: none;
-            position: absolute; 
-            bottom: 20px; 
-            right: 20px;
-            background: var(--slate); 
-            color: white; 
-            border: none;
-            padding: 10px 20px; 
-            border-radius: 24px; 
-            font-weight: 700;
-            font-size: 14px; 
-            cursor: pointer; 
-            z-index: 100;
-            box-shadow: var(--shadow-md);
-            transition: all 0.2s;
-        }
-        .toggle-preview:hover {
-            background: var(--primary);
-            transform: translateY(-2px);
-        }
-
-        /* --- 手機版 RWD 邏輯 --- */
-        @media (max-width: 850px) {
-            .app-container { flex-direction: column; height: 100vh; width: 100vw; border-radius: 0; border: none; }
-            
-            .preview { 
-                flex: 0 0 45vh; 
-                order: -1; 
-                border-bottom: 1px solid var(--border);
-                padding: 50px 20px 20px 20px;
-                overflow: hidden; /* 防止收合時 Canvas 等元素溢出遮擋下方 controls */
-            }
-
-            .preview.collapsed {
-                flex: 0 0 60px;
-                padding: 0;
-                background: var(--cream);
-            }
-
-            .preview.collapsed .canvas-container,
-            .preview.collapsed .preview-toolbar {
-                opacity: 0; 
-                transform: scale(0.8);
-                pointer-events: none;
-                display: none; /* 徹底隱藏，釋放點擊與排版空間 */
-            }
-
-            .toggle-preview { display: block; }
-            .preview.collapsed .toggle-preview { bottom: 10px; }
-
-            .controls { flex: 1; padding: 20px 16px; background: #FFFFFF; }
-            body { overflow: auto; }
-            
-            .preview-toolbar {
-                top: 10px;
-                padding: 4px 8px;
-            }
-        }
-
-        /* 標題與標誌 */
-        h2 { font-size: var(--fs-h2); font-weight: 900; letter-spacing: -1px; color: var(--slate); }
-        .subtitle { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-        
-        /* 展開摺疊選單 (Details/Summary) Styling */
-        details {
-            background: var(--cream-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: var(--shadow-sm);
-        }
-        details[open] {
-            box-shadow: var(--shadow-md);
-            border-color: rgba(89, 158, 130, 0.3);
-        }
-        
-        summary {
-            padding: 18px 24px;
-            font-size: var(--fs-section);
-            font-weight: 800;
-            color: var(--slate);
-            cursor: pointer;
-            list-style: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-            background: #FFFFFF;
-            transition: background 0.2s;
-        }
-        summary:hover {
-            background: var(--slate-light);
-        }
-        summary::after {
-            content: "＋";
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--primary);
-            transition: transform 0.3s;
-        }
-        details[open] summary::after {
-            content: "－";
-            transform: rotate(90deg);
-        }
-        
-        .details-content {
-            padding: 20px 24px 24px 24px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            background: #FAFBFB;
-        }
-
-        .input-group { display: flex; flex-direction: column; gap: 8px; }
-        label { font-size: var(--fs-label); font-weight: 700; color: var(--slate); display: flex; justify-content: space-between; align-items: center; }
-        label span { background: var(--primary-light); padding: 3px 10px; border-radius: 20px; color: var(--primary); font-size: 0.85em; font-weight: 800; }
-
-        input[type="text"] {
-            padding: 14px 16px; 
-            border: 2px solid var(--border); 
-            border-radius: var(--radius-sm); 
-            font-size: 15px; 
-            background: #FFFFFF; 
-            transition: all 0.2s; 
-            font-weight: 500;
-            color: var(--slate);
-            width: 100%;
-        }
-        input[type="text"]:focus { 
-            border-color: var(--primary); 
-            outline: none; 
-            box-shadow: 0 0 0 3px rgba(89, 158, 130, 0.15);
-        }
-
-        /* 自訂美化滑桿 (Range Input) */
-        input[type="range"] { 
-            -webkit-appearance: none; 
-            height: 6px; 
-            background: var(--border); 
-            border-radius: 10px; 
-            margin: 12px 0; 
-            outline: none;
-            width: 100%;
-        }
-        input[type="range"]::-webkit-slider-thumb { 
-            -webkit-appearance: none; 
-            width: 22px; 
-            height: 22px; 
-            background: var(--primary); 
-            border-radius: 50%; 
-            border: 4px solid #fff; 
-            box-shadow: 0 4px 8px rgba(45, 58, 70, 0.25); 
-            cursor: pointer;
-            transition: transform 0.1s, background-color 0.2s;
-        }
-        input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.15);
-            background: var(--primary-hover);
-        }
-
-        /* 快速配色區 */
-        .preset-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-            margin-top: 5px;
-        }
-        .preset-card {
-            background: #FFFFFF;
-            border: 1.5px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 10px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-        .preset-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-sm);
-        }
-        .preset-card.active {
-            border-color: var(--primary);
-            background: var(--primary-light);
-            box-shadow: 0 0 0 2px var(--primary);
-        }
-        .preset-colors {
-            display: flex;
-            gap: 4px;
-        }
-        .color-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 1px solid rgba(0,0,0,0.08);
-        }
-        .preset-name {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--slate);
-        }
-
-        /* 顏色選取器列 */
-        .color-row { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr;
-            gap: 14px; 
-        }
-        .color-item { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-        
-        /* 隱藏原生 color，做美化按鈕 */
-        .color-picker-wrapper {
-            position: relative;
-            width: 100%;
-            height: 48px;
-            border-radius: var(--radius-sm);
-            border: 2px solid var(--border);
-            overflow: hidden;
-            background: #FFFFFF;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-        .color-picker-wrapper:hover {
-            border-color: var(--primary);
-        }
-        .color-picker-wrapper input[type="color"] { 
-            position: absolute;
-            left: -10px; top: -10px;
-            width: calc(100% + 20px); height: calc(100% + 20px);
-            border: none; 
-            cursor: pointer; 
-            opacity: 0;
-            z-index: 5;
-        }
-        .color-preview-block {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            margin-left: 8px;
-            border: 1px solid rgba(0,0,0,0.1);
-            pointer-events: none;
-            z-index: 1;
-        }
-        .color-hex-text {
-            font-size: 13px;
-            font-weight: 700;
-            margin-left: 10px;
-            color: var(--slate);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        /* Logo 模式切換卡 */
-        .logo-mode-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-        }
-        .logo-mode-btn {
-            background: #FFFFFF;
-            border: 2px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 12px 6px;
-            text-align: center;
-            font-size: 13px;
-            font-weight: 800;
-            color: var(--slate);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .logo-mode-btn:hover {
-            border-color: var(--primary);
-            background: var(--slate-light);
-        }
-        .logo-mode-btn.active {
-            background: var(--primary-light);
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        /* 檔案上傳外框 */
-        .file-upload-wrapper {
-            position: relative; 
-            width: 100%; 
-            height: 80px;
-            border: 2px dashed var(--border); 
-            border-radius: var(--radius-md);
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: #FFFFFF;
-            transition: all 0.3s;
-        }
-        .file-upload-wrapper:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        .file-upload-wrapper input[type="file"] { 
-            position: absolute; 
-            width: 100%; 
-            height: 100%; 
-            opacity: 0; 
-            cursor: pointer; 
-            z-index: 10; 
-        }
-        .file-upload-text { 
-            text-align: center; 
-            color: var(--text-muted); 
-            font-size: 14px; 
-            font-weight: 600; 
-            padding: 0 15px;
-            pointer-events: none;
-        }
-        .file-upload-text b { color: var(--primary); }
-
-        /* 操作按鈕組合 */
-        .action-row {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 15px;
-            margin-top: auto;
-            padding-top: 10px;
-        }
-
-        .btn-down { 
-            background: linear-gradient(135deg, var(--primary), #3f8369); 
-            color: white; 
-            border: none;
-            padding: 18px 24px; 
-            border-radius: var(--radius-md); 
-            font-weight: 800; 
-            font-size: 16px; 
-            cursor: pointer; 
-            box-shadow: 0 10px 25px rgba(89, 158, 130, 0.3);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            letter-spacing: 0.5px;
-        }
-        .btn-down:hover { 
-            transform: translateY(-3px); 
-            box-shadow: 0 15px 35px rgba(89, 158, 130, 0.4);
-            background: linear-gradient(135deg, #4da481, #3f8369);
-        }
-        .btn-down:active {
-            transform: translateY(-1px);
-        }
-
-        .btn-copy {
-            background: var(--slate); 
-            color: white; 
-            border: none;
-            padding: 18px 20px; 
-            border-radius: var(--radius-md); 
-            font-weight: 800; 
-            font-size: 16px; 
-            cursor: pointer; 
-            box-shadow: 0 10px 25px rgba(45, 58, 70, 0.2);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .btn-copy:hover { 
-            transform: translateY(-3px); 
-            box-shadow: 0 15px 35px rgba(45, 58, 70, 0.3);
-            background: var(--slate-hover);
-        }
-        .btn-copy:active {
-            transform: translateY(-1px);
-        }
-
-        /* 提示框 Toast UI */
-        .toast {
-            position: fixed;
-            top: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--slate);
-            color: #FFFFFF;
-            padding: 14px 28px;
-            border-radius: 30px;
-            font-weight: 700;
-            font-size: 15px;
-            box-shadow: var(--shadow-lg);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
-            opacity: 0;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .toast.show {
-            top: 30px;
-            opacity: 1;
-        }
-        .toast.error {
-            background: #D9383A;
-        }
-    </style>
 </head>
 <body>
 
-<div class="toast" id="toastBox">
+<div class="toast" id="toastBox" role="status" aria-live="polite">
     <span id="toastIcon">✨</span>
-    <span id="toastText">圖片已複製到剪貼簿！</span>
+    <span id="toastText"></span>
 </div>
 
 <div class="app-container">
     <!-- 左側設定控制面板 -->
     <div class="controls">
         <!-- 頂部 Header -->
-        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 5px;">
-            <img src="logo.png" alt="QR Gen Logo" style="width: 54px; height: 54px; border-radius: 14px; box-shadow: var(--shadow-sm); border: 1.5px solid var(--border);">
+        <header class="app-header">
+            <img id="headerLogo" alt="QR Gen Studio Logo">
             <div>
                 <h2>QR Gen Studio</h2>
-                <p class="subtitle">專業設計師級 QR Code 精緻工作站</p>
+                <p class="subtitle">輸入網址，產生可下載的 QR Code 圖片</p>
             </div>
-        </div>
-        
+        </header>
+
         <!-- 手風琴控制群組 -->
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-            
+        <div class="accordion">
+
             <!-- 1. 內容設定 -->
             <details open>
                 <summary>📝 內容設定</summary>
                 <div class="details-content">
                     <div class="input-group">
-                        <label>目標網址 (URL)</label>
-                        <input type="text" id="urlInput" value="https://google.com" placeholder="例如：https://yourdomain.com">
+                        <label for="urlInput">目標網址 (URL) 或文字</label>
+                        <input type="text" id="urlInput" value="https://google.com" placeholder="例如：https://yourdomain.com" autocomplete="url" spellcheck="false">
                     </div>
                     <div class="input-group">
-                        <label>底部描述文字</label>
-                        <input type="text" id="descInput" value="請掃描進入官方網站" placeholder="輸入要顯示在下方的宣傳文字">
+                        <label for="descInput">底部描述文字</label>
+                        <textarea id="descInput" rows="2" placeholder="輸入要顯示在下方的宣傳文字">請掃描進入官方網站</textarea>
+                        <span class="field-hint">可按 Enter 手動換行</span>
                     </div>
                 </div>
             </details>
@@ -666,43 +59,10 @@
             <details>
                 <summary>🎨 風格與色彩</summary>
                 <div class="details-content">
-                    <!-- 快速預設組合 -->
+                    <!-- 快速預設組合 (由 presets.ts 產生) -->
                     <div class="input-group">
-                        <label>設計師色彩預設</label>
-                        <div class="preset-grid">
-                            <div class="preset-card active" onclick="applyPreset('classic')">
-                                <div class="preset-colors">
-                                    <div class="color-dot" style="background:#FAF8F5;"></div>
-                                    <div class="color-dot" style="background:#2D3A44;"></div>
-                                    <div class="color-dot" style="background:#2D3A44;"></div>
-                                </div>
-                                <span class="preset-name">QR Gen 經典</span>
-                            </div>
-                            <div class="preset-card" onclick="applyPreset('mint')">
-                                <div class="preset-colors">
-                                    <div class="color-dot" style="background:#FAF8F5;"></div>
-                                    <div class="color-dot" style="background:#2D3A44;"></div>
-                                    <div class="color-dot" style="background:#599E82;"></div>
-                                </div>
-                                <span class="preset-name">翡翠薄荷</span>
-                            </div>
-                            <div class="preset-card" onclick="applyPreset('forest')">
-                                <div class="preset-colors">
-                                    <div class="color-dot" style="background:#2D3A44;"></div>
-                                    <div class="color-dot" style="background:#FAF7F2;"></div>
-                                    <div class="color-dot" style="background:#599E82;"></div>
-                                </div>
-                                <span class="preset-name">森林暗奢</span>
-                            </div>
-                            <div class="preset-card" onclick="applyPreset('luxe')">
-                                <div class="preset-colors">
-                                    <div class="color-dot" style="background:#1A1A1A;"></div>
-                                    <div class="color-dot" style="background:#F7F5F0;"></div>
-                                    <div class="color-dot" style="background:#C5A880;"></div>
-                                </div>
-                                <span class="preset-name">香檳摩登</span>
-                            </div>
-                        </div>
+                        <label>配色預設</label>
+                        <div class="preset-grid" id="presetGrid"></div>
                     </div>
 
                     <!-- 自訂條碼色彩 -->
@@ -710,22 +70,23 @@
                         <label>條碼色彩配置</label>
                         <div class="color-row">
                             <div class="color-item">
-                                <label style="font-size:12px; color:var(--text-muted);">條碼前景色 (Dark)</label>
-                                <div class="color-picker-wrapper" id="qrDarkWrapper">
+                                <label class="sub-label" for="qrColorDark">條碼前景色 (Dark)</label>
+                                <div class="color-picker-wrapper">
                                     <div class="color-preview-block" id="qrDarkPreview"></div>
-                                    <span class="color-hex-text" id="qrDarkHex">#2D3A44</span>
+                                    <span class="color-hex-text" id="qrDarkHex"></span>
                                     <input type="color" id="qrColorDark" value="#2D3A44">
                                 </div>
                             </div>
                             <div class="color-item">
-                                <label style="font-size:12px; color:var(--text-muted);">條碼背景色 (Light)</label>
-                                <div class="color-picker-wrapper" id="qrLightWrapper">
+                                <label class="sub-label" for="qrColorLight">條碼背景色 (Light)</label>
+                                <div class="color-picker-wrapper">
                                     <div class="color-preview-block" id="qrLightPreview"></div>
-                                    <span class="color-hex-text" id="qrLightHex">#FAF8F5</span>
+                                    <span class="color-hex-text" id="qrLightHex"></span>
                                     <input type="color" id="qrColorLight" value="#FAF8F5">
                                 </div>
                             </div>
                         </div>
+                        <div class="contrast-warning" id="contrastWarning" role="alert"></div>
                     </div>
 
                     <!-- 自訂畫布色彩 -->
@@ -733,18 +94,18 @@
                         <label>整體畫布色彩</label>
                         <div class="color-row">
                             <div class="color-item">
-                                <label style="font-size:12px; color:var(--text-muted);">文字顏色 (Text)</label>
-                                <div class="color-picker-wrapper" id="textColWrapper">
+                                <label class="sub-label" for="textColor">文字顏色 (Text)</label>
+                                <div class="color-picker-wrapper">
                                     <div class="color-preview-block" id="textColPreview"></div>
-                                    <span class="color-hex-text" id="textColHex">#2D3A44</span>
+                                    <span class="color-hex-text" id="textColHex"></span>
                                     <input type="color" id="textColor" value="#2D3A44">
                                 </div>
                             </div>
                             <div class="color-item">
-                                <label style="font-size:12px; color:var(--text-muted);">海報背景色 (Canvas)</label>
-                                <div class="color-picker-wrapper" id="bgColWrapper">
+                                <label class="sub-label" for="bgColor">海報背景色 (Canvas)</label>
+                                <div class="color-picker-wrapper">
                                     <div class="color-preview-block" id="bgColPreview"></div>
-                                    <span class="color-hex-text" id="bgColHex">#FAF8F5</span>
+                                    <span class="color-hex-text" id="bgColHex"></span>
                                     <input type="color" id="bgColor" value="#FAF8F5">
                                 </div>
                             </div>
@@ -758,15 +119,15 @@
                 <summary>📐 尺寸與佈局</summary>
                 <div class="details-content">
                     <div class="input-group">
-                        <label>QR Code 大小 <span id="qrVal">280</span></label>
+                        <label for="qrSlider">QR Code 大小 <span id="qrVal">280</span></label>
                         <input type="range" id="qrSlider" min="180" max="500" value="280">
                     </div>
                     <div class="input-group">
-                        <label>描述文字大小 <span id="fontVal">22</span></label>
+                        <label for="fontSlider">描述文字大小 <span id="fontVal">22</span></label>
                         <input type="range" id="fontSlider" min="14" max="50" value="22">
                     </div>
                     <div class="input-group">
-                        <label>條碼文字垂直間隔 <span id="gapVal">25</span></label>
+                        <label for="gapSlider">條碼文字垂直間隔 <span id="gapVal">25</span></label>
                         <input type="range" id="gapSlider" min="10" max="80" value="25">
                     </div>
                 </div>
@@ -778,47 +139,49 @@
                 <div class="details-content">
                     <div class="input-group">
                         <label>標誌展示模式</label>
-                        <div class="logo-mode-grid">
-                            <div class="logo-mode-btn active" id="logoMode-default" onclick="setLogoMode('default')">預設 LOGO</div>
-                            <div class="logo-mode-btn" id="logoMode-custom" onclick="setLogoMode('custom')">自訂圖片</div>
-                            <div class="logo-mode-btn" id="logoMode-none" onclick="setLogoMode('none')">不使用</div>
+                        <div class="logo-mode-grid" role="radiogroup" aria-label="標誌展示模式">
+                            <button type="button" class="logo-mode-btn" data-mode="default" role="radio">預設 LOGO</button>
+                            <button type="button" class="logo-mode-btn" data-mode="custom" role="radio">自訂圖片</button>
+                            <button type="button" class="logo-mode-btn" data-mode="none" role="radio">不使用</button>
                         </div>
                     </div>
 
-                    <!-- 上傳區 (在 custom 模式時顯著提示) -->
-                    <div class="input-group" id="uploadGroup" style="display: none;">
-                        <label>上傳中心 LOGO</label>
+                    <!-- 上傳區 (custom 模式才顯示) -->
+                    <div class="input-group" id="uploadGroup" hidden>
+                        <label for="logoInput">上傳中心 LOGO</label>
                         <div class="file-upload-wrapper">
                             <input type="file" id="logoInput" accept="image/*">
-                            <div class="file-upload-text" id="uploadStatusText">拖放圖片至此或 <b>點擊瀏覽</b><br><span style="font-size:11px; opacity:0.7;">支援 PNG, JPG, SVG</span></div>
+                            <div class="file-upload-text">
+                                <span id="uploadStatusMain">拖放圖片至此或 <b>點擊瀏覽</b></span><br>
+                                <span id="uploadStatusSub" style="font-size:11px; opacity:0.7;">支援 PNG, JPG, SVG</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="input-group" id="logoScaleGroup">
-                        <label>Logo 大小比例 <span id="logoVal">22</span>%</label>
+                    <div class="input-group logo-option">
+                        <label for="logoSlider">Logo 大小比例 <span id="logoVal">22%</span></label>
                         <input type="range" id="logoSlider" min="15" max="30" value="22">
                     </div>
-                    <div class="input-group" id="logoRadiusGroup">
-                        <label>Logo 圓角弧度 <span id="logoRadiusVal">14</span></label>
+                    <div class="input-group logo-option">
+                        <label for="logoRadiusSlider">Logo 圓角弧度 <span id="logoRadiusVal">14</span></label>
                         <input type="range" id="logoRadiusSlider" min="0" max="25" value="14">
                     </div>
-                    
-                    <div class="input-group" id="logoZoomGroup">
-                        <label>Logo 縮放裁剪 <span id="logoZoomVal">1.00</span>x</label>
+                    <div class="input-group logo-option">
+                        <label for="logoZoomSlider">Logo 縮放裁剪 <span id="logoZoomVal">1.00x</span></label>
                         <input type="range" id="logoZoomSlider" min="1.0" max="1.5" step="0.05" value="1.00">
                     </div>
                 </div>
             </details>
         </div>
-        
+
         <!-- 操作按鈕列 -->
         <div class="action-row">
-            <button class="btn-down" onclick="downloadImage()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <button type="button" class="btn-down" id="downloadBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 下載 PNG
             </button>
-            <button class="btn-copy" onclick="copyToClipboard()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <button type="button" class="btn-copy" id="copyBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 複製圖片
             </button>
         </div>
@@ -827,428 +190,29 @@
     <!-- 右側預覽畫布 -->
     <div class="preview" id="previewArea">
         <div class="preview-grid-bg"></div>
-        
+
         <!-- 畫布上方控制工具 -->
-        <div class="preview-toolbar" id="toolbar">
-            <button class="toolbar-btn active" id="gridToggle" onclick="toggleGrid()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
+        <div class="preview-toolbar">
+            <button type="button" class="toolbar-btn active" id="gridToggle" aria-pressed="true">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
                 輔助網格
             </button>
-            <span style="width:1px; background:var(--border); align-self:stretch; margin:4px 0;"></span>
+            <span class="toolbar-divider"></span>
             <span class="toolbar-badge">
-                <span style="width: 6px; height: 6px; background: var(--primary); border-radius: 50%; display: inline-block; animation: pulse 1.8s infinite ease-in-out;"></span>
-                即時設計畫布 (Artboard)
+                <span class="pulse-dot"></span>
+                即時預覽
             </span>
         </div>
 
-        <button class="toggle-preview" id="toggleBtn" onclick="togglePreview()">收合預覽 ✕</button>
-        
+        <button type="button" class="toggle-preview" id="toggleBtn">收合預覽 ✕</button>
+
+        <div class="qr-error" id="qrError" role="alert"></div>
         <div class="canvas-container">
-            <canvas id="mainCanvas"></canvas>
+            <canvas id="mainCanvas" aria-label="QR Code 海報預覽"></canvas>
         </div>
-        <div id="hidden-qr" style="display:none;"></div>
     </div>
 </div>
 
-<script>
-    // --- UI 輔助功能 ---
-    
-    // 側邊預覽收合 (手機版專用)
-    function togglePreview() {
-        const preview = document.getElementById('previewArea');
-        const btn = document.getElementById('toggleBtn');
-        const isCollapsed = preview.classList.toggle('collapsed');
-        btn.innerText = isCollapsed ? "展開預覽 👁️" : "收合預覽 ✕";
-    }
-
-    // 切換畫布網格輔助線
-    function toggleGrid() {
-        const preview = document.getElementById('previewArea');
-        const gridBtn = document.getElementById('gridToggle');
-        const hasGrid = preview.classList.toggle('no-grid');
-        if (hasGrid) {
-            gridBtn.classList.remove('active');
-        } else {
-            gridBtn.classList.add('active');
-        }
-    }
-
-    // 彈出 Toast 訊息
-    function showToast(text, isError = false) {
-        const toast = document.getElementById('toastBox');
-        const icon = document.getElementById('toastIcon');
-        const textSpan = document.getElementById('toastText');
-        
-        textSpan.innerText = text;
-        icon.innerText = isError ? "⚠️" : "✨";
-        if (isError) {
-            toast.classList.add('error');
-        } else {
-            toast.classList.remove('error');
-        }
-        
-        toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
-    }
-
-    // 格式化顏色選擇器的 UI 顯示
-    function syncColorUI(inputElementId, previewElementId, hexTextId) {
-        const input = document.getElementById(inputElementId);
-        const preview = document.getElementById(previewElementId);
-        const text = document.getElementById(hexTextId);
-        
-        if (input && preview && text) {
-            preview.style.backgroundColor = input.value;
-            text.innerText = input.value.toUpperCase();
-        }
-    }
-
-    // 初始化與綁定所有 Color Pickers UI 同步
-    const colorPickers = [
-        { input: 'qrColorDark', preview: 'qrDarkPreview', text: 'qrDarkHex' },
-        { input: 'qrColorLight', preview: 'qrLightPreview', text: 'qrLightHex' },
-        { input: 'textColor', preview: 'textColPreview', text: 'textColHex' },
-        { input: 'bgColor', preview: 'bgColPreview', text: 'bgColHex' }
-    ];
-
-    colorPickers.forEach(item => {
-        const element = document.getElementById(item.input);
-        element.addEventListener('input', () => {
-            syncColorUI(item.input, item.preview, item.text);
-            // 每次手動微調顏色，取消預設配色組合的 active 樣式
-            document.querySelectorAll('.preset-card').forEach(card => card.classList.remove('active'));
-        });
-    });
-
-    // --- LOGO 模式選擇 ---
-    let currentLogoMode = 'default';
-    function setLogoMode(mode) {
-        currentLogoMode = mode;
-        
-        document.querySelectorAll('.logo-mode-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.getElementById(`logoMode-${mode}`).classList.add('active');
-
-        // 控制上傳區與滑桿區的顯示/隱藏
-        const uploadGroup = document.getElementById('uploadGroup');
-        const logoScaleGroup = document.getElementById('logoScaleGroup');
-        const logoRadiusGroup = document.getElementById('logoRadiusGroup');
-        const logoZoomGroup = document.getElementById('logoZoomGroup');
-
-        if (mode === 'none') {
-            uploadGroup.style.display = 'none';
-            logoScaleGroup.style.display = 'none';
-            logoRadiusGroup.style.display = 'none';
-            logoZoomGroup.style.display = 'none';
-        } else if (mode === 'custom') {
-            uploadGroup.style.display = 'flex';
-            logoScaleGroup.style.display = 'flex';
-            logoRadiusGroup.style.display = 'flex';
-            logoZoomGroup.style.display = 'flex';
-        } else {
-            uploadGroup.style.display = 'none';
-            logoScaleGroup.style.display = 'flex';
-            logoRadiusGroup.style.display = 'flex';
-            logoZoomGroup.style.display = 'flex';
-        }
-
-        render();
-    }
-
-    // 自訂上傳檔案改變狀態
-    document.getElementById('logoInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        const statusText = document.getElementById('uploadStatusText');
-        if (file) {
-            statusText.innerHTML = `已選取：<b>${file.name}</b><br><span style="font-size:11px; opacity:0.7;">點擊可重新上傳</span>`;
-            showToast("成功上傳自訂標誌！🎯");
-            render();
-        }
-    });
-
-    // --- 快速配色預設組合 ---
-    const presets = {
-        classic: {
-            canvasBg: '#FAF8F5',
-            text: '#2D3A44',
-            qrDark: '#2D3A44',
-            qrLight: '#FAF8F5'
-        },
-        mint: {
-            canvasBg: '#FAF8F5',
-            text: '#2D3A44',
-            qrDark: '#599E82',
-            qrLight: '#FAF8F5'
-        },
-        forest: {
-            canvasBg: '#2D3A44',
-            text: '#FAF7F2',
-            qrDark: '#599E82',
-            qrLight: '#FAF7F2'
-        },
-        luxe: {
-            canvasBg: '#1A1A1A',
-            text: '#F7F5F0',
-            qrDark: '#C5A880',
-            qrLight: '#1A1A1A'
-        }
-    };
-
-    function applyPreset(presetName) {
-        // 設定 preset active 邊框
-        document.querySelectorAll('.preset-card').forEach(card => card.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-
-        const p = presets[presetName];
-        if (!p) return;
-
-        // 設定各項 color input 值
-        document.getElementById('bgColor').value = p.canvasBg;
-        document.getElementById('textColor').value = p.text;
-        document.getElementById('qrColorDark').value = p.qrDark;
-        document.getElementById('qrColorLight').value = p.qrLight;
-
-        // 同步 UI 顯示
-        colorPickers.forEach(item => {
-            syncColorUI(item.input, item.preview, item.text);
-        });
-
-        showToast(`已套用「${event.currentTarget.querySelector('.preset-name').innerText}」配色！🎨`);
-        render();
-    }
-
-    // --- 渲染與 QR Code 主邏輯 ---
-    function debounce(func, timeout = 100) {
-        let timer;
-        return (...args) => {
-            clearTimeout(timer);
-            timer = setTimeout(() => { func.apply(this, args); }, timeout);
-        };
-    }
-
-    const ids = ['urlInput', 'descInput', 'qrSlider', 'fontSlider', 'gapSlider', 'logoSlider', 'logoRadiusSlider', 'logoZoomSlider', 'qrColorDark', 'qrColorLight', 'textColor', 'bgColor', 'logoInput'];
-    const debouncedRender = debounce(render, 80);
-    ids.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('input', debouncedRender);
-    });
-
-    async function render() {
-        const url = document.getElementById('urlInput').value;
-        const desc = document.getElementById('descInput').value;
-        
-        const qrSize = parseInt(document.getElementById('qrSlider').value);
-        const fontSize = parseInt(document.getElementById('fontSlider').value);
-        const gap = parseInt(document.getElementById('gapSlider').value);
-        const logoScale = parseInt(document.getElementById('logoSlider').value) / 100;
-        const logoBorderRadius = parseInt(document.getElementById('logoRadiusSlider').value);
-        const logoZoom = parseFloat(document.getElementById('logoZoomSlider').value);
-        
-        const qrDark = document.getElementById('qrColorDark').value;
-        const qrLight = document.getElementById('qrColorLight').value;
-        const txtCol = document.getElementById('textColor').value;
-        const bgCol = document.getElementById('bgColor').value;
-        const logoFile = document.getElementById('logoInput').files[0];
-
-        // 更新滑桿旁的數值顯示
-        document.getElementById('qrVal').innerText = qrSize;
-        document.getElementById('fontVal').innerText = fontSize;
-        document.getElementById('gapVal').innerText = gap;
-        document.getElementById('logoVal').innerText = Math.round(logoScale * 100);
-        document.getElementById('logoRadiusVal').innerText = logoBorderRadius;
-        document.getElementById('logoZoomVal').innerText = logoZoom.toFixed(2);
-
-        if (!url) return;
-        const canvas = document.getElementById('mainCanvas');
-        const ctx = canvas.getContext('2d');
-        const hiddenQr = document.getElementById('hidden-qr');
-        hiddenQr.innerHTML = "";
-        
-        // 渲染基礎二維碼 (透過外部 qrcode.js，代入 QR 專用前景色與背景色)
-        new QRCode(hiddenQr, { 
-            text: url, 
-            width: qrSize, 
-            height: qrSize, 
-            colorDark: qrDark,
-            colorLight: qrLight,
-            correctLevel: QRCode.Level ? QRCode.Level.H : 3 
-        });
-
-        setTimeout(async () => {
-            const qrImg = hiddenQr.querySelector('img');
-            if(!qrImg) return;
-            
-            const padding = 60;
-            const lineHeight = fontSize * 1.4;
-            
-            // 計算底部字體多行折行
-            ctx.font = `bold ${fontSize}px 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif`;
-            const lines = [];
-            let cur = "";
-            for (let c of desc) {
-                if (ctx.measureText(cur + c).width > qrSize) { 
-                    lines.push(cur); 
-                    cur = c; 
-                } else { 
-                    cur += c; 
-                }
-            }
-            lines.push(cur);
-
-            const textTotalHeight = desc ? (lines.length * lineHeight) : 0;
-            const baseWidth = qrSize + padding * 2;
-            const baseHeight = padding * 2 + qrSize + (desc ? gap : 0) + textTotalHeight;
-
-            // 高 DPR (Retina) 優化，避免模糊
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = baseWidth * dpr;
-            canvas.height = baseHeight * dpr;
-            canvas.style.width = baseWidth + "px";
-            canvas.style.height = baseHeight + "px";
-            ctx.scale(dpr, dpr);
-
-            // 1. 塗滿整體畫布背景色
-            ctx.fillStyle = bgCol;
-            ctx.fillRect(0, 0, baseWidth, baseHeight);
-            
-            // 2. 繪製條碼主體
-            ctx.drawImage(qrImg, padding, padding, qrSize, qrSize);
-
-            // 3. 處理中心標誌 LOGO 繪製
-            if (currentLogoMode !== 'none') {
-                let logoImgToDraw = null;
-                if (currentLogoMode === 'custom' && logoFile) {
-                    logoImgToDraw = await readAsImage(logoFile);
-                } else if (currentLogoMode === 'default') {
-                    logoImgToDraw = await new Promise(res => {
-                        const i = new Image();
-                        i.onload = () => res(i);
-                        i.onerror = () => res(null);
-                        i.src = 'logo.png';
-                    });
-                }
-
-                if (logoImgToDraw) {
-                    const s = qrSize * logoScale;
-                    const x = (baseWidth - s) / 2;
-                    const y = padding + (qrSize - s) / 2;
-                    
-                    ctx.save();
-                    
-                    // A. 建立 Logo 裁剪與背景圓角路徑 (大小與 Logo 完全相等，不向外延伸留多餘白邊)
-                    ctx.beginPath();
-                    const innerRadius = Math.min(s / 2, logoBorderRadius);
-                    ctx.roundRect(x, y, s, s, innerRadius);
-                    ctx.clip();
-                    
-                    // B. 填滿 Logo 底色 (預防透明 LOGO 被二維碼線條穿透)
-                    ctx.fillStyle = qrLight; 
-                    ctx.fill();
-                    
-                    // C. 繪入滿版 Logo 圖形 (以中心為基點進行放大裁剪，以消除圖片本身的邊角白框)
-                    const zS = s * logoZoom;
-                    const zX = x - (zS - s) / 2;
-                    const zY = y - (zS - s) / 2;
-                    ctx.drawImage(logoImgToDraw, zX, zY, zS, zS);
-                    
-                    ctx.restore();
-                }
-            }
-
-            // 4. 繪製描述文字
-            if (desc) {
-                ctx.fillStyle = txtCol;
-                ctx.textAlign = "center";
-                ctx.font = `bold ${fontSize}px 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif`;
-                lines.forEach((l, i) => {
-                    ctx.fillText(l, baseWidth / 2, padding + qrSize + gap + fontSize + (i * lineHeight));
-                });
-            }
-        }, 85);
-    }
-
-    function readAsImage(f) { 
-        return new Promise(res => { 
-            const r = new FileReader(); 
-            r.onload = e => { 
-                const i = new Image(); 
-                i.onload = () => res(i); 
-                i.src = e.target.result; 
-            }; 
-            r.readAsDataURL(f); 
-        }); 
-    }
-
-    // --- 下載海報圖片 ---
-    function downloadImage() { 
-        const link = document.createElement('a'); 
-        link.download = `QR_Premium_Design_${Date.now()}.png`; 
-        link.href = document.getElementById('mainCanvas').toDataURL('image/png', 1.0); 
-        link.click(); 
-        showToast("已成功下載高解析 PNG 成品！🚀");
-    }
-
-    // --- 一鍵複製圖片到剪貼簿 (Clipboard API, 支援跨瀏覽器與安全手勢) ---
-    function copyToClipboard() {
-        const canvas = document.getElementById('mainCanvas');
-        
-        // 檢查瀏覽器是否支援剪貼簿寫入與 ClipboardItem
-        if (!navigator.clipboard || !window.ClipboardItem) {
-            showToast("您的瀏覽器或開啟方式（如直接按檔案打開而非使用伺服器）不支援複製，請直接下載！", true);
-            return;
-        }
-
-        try {
-            // 使用 Promise 包裹 toBlob，直接傳給 ClipboardItem 構造函數
-            // 這能維持瀏覽器內部的 User Gesture（使用者手勢活性），相容 Chrome 與 Safari 限制
-            const item = new ClipboardItem({
-                'image/png': new Promise((resolve, reject) => {
-                    try {
-                        canvas.toBlob((blob) => {
-                            if (blob) {
-                                resolve(blob);
-                            } else {
-                                reject(new Error("無法將畫布轉換為 Blob"));
-                            }
-                        }, 'image/png', 1.0);
-                    } catch (e) {
-                        reject(e);
-                    }
-                })
-            });
-
-            // 執行寫入
-            navigator.clipboard.write([item])
-                .then(() => {
-                    showToast("圖片已複製到系統剪貼簿！✨");
-                })
-                .catch((err) => {
-                    console.error("剪貼簿寫入錯誤:", err);
-                    // 針對非安全上下文 (file:// 協議) 做提示
-                    if (window.location.protocol === 'file:') {
-                        showToast("複製失敗！file:// 協議不支援此功能，請使用 localhost 或直接下載！", true);
-                    } else {
-                        showToast("複製失敗，瀏覽器拒絕了寫入，請直接下載！", true);
-                    }
-                });
-
-        } catch (e) {
-            console.error("初始化剪貼簿項目失敗:", e);
-            showToast("瀏覽器限制了複製操作，請改用下載！", true);
-        }
-    }
-
-    // 視窗載入初始化
-    window.onload = () => {
-        // 初始化同步所有 Color Pickers UI 顯示
-        colorPickers.forEach(item => {
-            syncColorUI(item.input, item.preview, item.text);
-        });
-        render();
-    };
-</script>
+<script type="module" src="/src/main.ts"></script>
 </body>
 </html>
