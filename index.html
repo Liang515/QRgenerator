@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>QR Gen Studio - QR Code 產生器</title>
-    <meta name="theme-color" content="#2488EA">
+    <!-- 狀態列背後的顏色：與手機版標題列同為白色 -->
+    <meta name="theme-color" content="#FFFFFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="QR Gen">
     <link rel="apple-touch-icon" href="./icons/icon-180.png">
     <link rel="icon" type="image/png" href="./icons/icon-192.png">
@@ -18,6 +18,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
+
+<!-- iOS 26 從主畫面開啟時，會在畫面頂端與底端約 40pt 疊一層霧化（scroll edge effect），
+     沒有 meta 能關。WebKit 只在邊緣有「固定、全寬、高於 10px、單一底色」的元素時不加霧化，
+     改把該顏色延伸進系統區域。這兩條就是那個元素：background-clip:text 又沒有文字，所以看不見。
+     用 inline style 是為了第一個畫面就生效 (做法取自 typhoon-cast)。 -->
+<div class="edge-band" aria-hidden="true" style="position:fixed;top:0;left:0;right:0;height:12px;background-color:#ffffff;-webkit-background-clip:text;background-clip:text;pointer-events:none;z-index:2147483647"></div>
+<div class="edge-band" aria-hidden="true" style="position:fixed;bottom:0;left:0;right:0;height:12px;background-color:#ffffff;-webkit-background-clip:text;background-clip:text;pointer-events:none;z-index:2147483647"></div>
+<!-- 狀態列後方的白底：往下捲時內容躲在它後面，不會透到時間與電量底下 (瀏覽器分頁中高度為 0) -->
+<div class="status-shield" aria-hidden="true"></div>
 
 <div class="toast" id="toastBox" role="status" aria-live="polite">
     <span id="toastIcon">✨</span>
