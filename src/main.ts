@@ -269,7 +269,10 @@ async function init(): Promise<void> {
   // 還原上次設定；欄位初始值當作預設值
   const saved = loadState();
   if (saved) {
-    const merged = { ...readForm('default', DEFAULT_PRESET), ...saved };
+    const defaults = readForm('default', DEFAULT_PRESET);
+    // 舊版預設網址是 google.com；沒改過的人改用新的預設網址
+    if (saved.url === 'https://google.com') saved.url = defaults.url;
+    const merged = { ...defaults, ...saved };
     writeForm(merged);
     logoMode = merged.logoMode === 'custom' ? 'default' : merged.logoMode; // 自訂圖片無法跨工作階段保存
     activePreset = merged.preset;
